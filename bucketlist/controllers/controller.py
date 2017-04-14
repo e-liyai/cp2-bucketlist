@@ -377,16 +377,20 @@ def update_item(item_id):
     :param item_id: id of the item to be updated
     :return: item json response
     """
+    new_item = {}
     date_completed = None
-    if request.form["done"] is True:
-        date_completed = datetime.utcnow
+    done = False
+    if request.form["done"] == 'True':
+        done = True
+        date_completed = datetime.now()
 
     new_item = {
         "item_name": request.form["name"],
-        "done": request.form["done"],
+        "done": done,
         "description": request.form["description"],
         "date_completed": date_completed
     }
+
     updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
         return make_response('', 204)
