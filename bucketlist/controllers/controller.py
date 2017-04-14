@@ -386,7 +386,7 @@ def update_item(item_id):
     if not updated_item:
         return make_response('', 204)
     else:
-        return jsonify({"bucket_list": updated_item})
+        return jsonify({"bucket_list_item": updated_item})
 
 
 def delete_item(item_id):
