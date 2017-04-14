@@ -66,7 +66,7 @@ class DatabaseController:
         self.session.add(new_user)
         self.session.commit()
 
-        return new_user.user_id
+        return {"user_id": new_user.user_id, "username": new_user.username}
 
     def get_user_by_email_or_username(self, username=None, email=None, serialize=False):
         """

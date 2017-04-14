@@ -11,7 +11,7 @@ Desc      : Controller file processes request from the api endpoints
 import hashlib
 import json
 
-from flask import jsonify, request, abort, make_response, url_for, g
+from flask import jsonify, request, abort, make_response
 from flask_login import login_required, login_user, logout_user, current_user
 
 from math import ceil
@@ -151,16 +151,13 @@ def add_user():
     username = request.form["username"]
     password = request.form["password"]
 
-    new_user_id = DATA_CONTROLLER.create_user(first_name=first_name,
-                                              last_name=last_name,
-                                              email=email,
-                                              username=username,
-                                              password=password)
+    new_user = DATA_CONTROLLER.create_user(first_name=first_name,
+                                           last_name=last_name,
+                                           email=email,
+                                           username=username,
+                                           password=password)
 
-    return jsonify({
-        "id": new_user_id,
-        "url": url_for("candidate_by_id", id=new_user_id)
-    })
+    return jsonify({"new_user": new_user})
 
 
 def user_by_id(user_id):
@@ -197,7 +194,7 @@ def update_user(user_id):
     }
     updated_user = DATA_CONTROLLER.update_user(user_id, new_user)
     if not updated_user:
-        return make_response('', 404)
+        return make_response('', 204)
     else:
         return jsonify({"user": updated_user})
 
@@ -247,15 +244,16 @@ def create_bucketlist():
     })
 
 
-def bucketlist(serialize=True):
+def bucketlist(bucket_id=None, serialize=True):
     """
 
     The method returns bucketlist in a json responses.
 
+    :param bucket_id: id of bucket list to be retrieved
     :param serialize: Serialize helps indicate the format of the response
     :return: Json format or plain text depending in the serialize parameter
     """
-    bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(serialize=True)
+    bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
     page = request.args.get("limit")
     if page:
         number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
@@ -291,9 +289,9 @@ def update_bucketlist(bucket_id):
     new_bucket = {
         "bucketlist_name": request.form["name"]
     }
-    updated_bucket = DATA_CONTROLLER.update_user(bucket_id, new_bucket)
+    updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id, new_bucket)
     if not updated_bucket:
-        return make_response('', 404)
+        return make_response('', 204)
     else:
         return jsonify({"bucket_list": updated_bucket})
 
@@ -386,7 +384,7 @@ def update_item(item_id):
     }
     updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
-        return make_response('', 404)
+        return make_response('', 204)
     else:
         return jsonify({"bucket_list": updated_item})
 
