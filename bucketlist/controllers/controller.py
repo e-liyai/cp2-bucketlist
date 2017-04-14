@@ -377,7 +377,7 @@ def update_item(item_id):
     :param item_id: id of the item to be updated
     :return: item json response
     """
-    new_item = {}
+
     date_completed = None
     done = False
     if request.form["done"] == 'True':
