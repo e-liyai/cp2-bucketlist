@@ -11,10 +11,11 @@ Desc      : Controller file processes request from the api endpoints
 import hashlib
 import json
 
+from math import ceil
+from datetime import datetime
+
 from flask import jsonify, request, abort, make_response
 from flask_login import login_required, login_user, logout_user, current_user
-
-from math import ceil
 
 from bucketlist.app import login_manager
 from bucketlist.controllers.database_controller import DatabaseController
@@ -376,11 +377,15 @@ def update_item(item_id):
     :param item_id: id of the item to be updated
     :return: item json response
     """
+    date_completed = None
+    if request.form["done"] is True:
+        date_completed = datetime.utcnow
+
     new_item = {
         "item_name": request.form["name"],
         "done": request.form["done"],
         "description": request.form["description"],
-        "date_completed": request.form["date_completed"]
+        "date_completed": date_completed
     }
     updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
