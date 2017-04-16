@@ -78,6 +78,9 @@ class DatabaseController:
         :return: The user with the matching username or email.
         """
 
+        if isinstance(username, int) or isinstance(email, int):
+            raise ValueError('Error in values passed to server!')
+
         single_user = None
         if username:
             single_user = self.get_by_username(username)
