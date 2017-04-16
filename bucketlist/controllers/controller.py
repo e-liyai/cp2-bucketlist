@@ -137,7 +137,9 @@ def users(serialize=True):
         data = {"users": users, "total": len(users)}
         json_data = json.dumps(data)
         response = make_response(jsonify(data), 200)
-        response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
+
+        # Caching
+        response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())  # Entity tag uniquely identifies request
         response.headers["Cache-Control"] = "private, max-age=300"
         return response
     else:
@@ -201,9 +203,9 @@ def update_user(user_id):
 
 def get_error_code(error):
     if "parameter" in error.message.lower():
-        return 9100
+        return 8100
 
-    return 9000
+    return 8000
 
 
 def delete_user(user_id):
@@ -221,8 +223,8 @@ def delete_user(user_id):
             return make_response("", 404)
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["X-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["X-APP-ERROR-MESSAGE"] = err.message
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -311,8 +313,8 @@ def delete_bucketlist(bucket_id):
             return make_response("", 404)
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["X-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["X-APP-ERROR-MESSAGE"] = err.message
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -412,6 +414,6 @@ def delete_item(item_id):
             return make_response("", 404)
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["X-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["X-APP-ERROR-MESSAGE"] = err.message
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
