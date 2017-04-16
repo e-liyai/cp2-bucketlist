@@ -18,32 +18,6 @@ TOKEN = hashlib.sha256("SAMPLE UNIQI TOKEN FOR USER").hexdigest()
 TOKEN_HEADER_NAME = "MY_AUTH_TOKEN"
 
 
-def login_authentication(username=None, email=None, password=None):
-    if username and password:
-        user = DatabaseController.get_user_by_email_or_username(username=username)
-        if user and user.check_user_password(password):
-            return {'status': True, 'User': user}
-        else:
-            return {'status': False, 'User': None}
-    elif email and password:
-        user = DatabaseController.get_user_by_email_or_username(email=email)
-        if user and user.check_user_password(password):
-            return {'status': True, 'User': user}
-        else:
-            return {'status': False, 'User': None}
-    else:
-        return {'status': False, 'User': None}
-
-
-def validate_user(username, password):
-    if username and password:
-        user = DatabaseController.get_user_by_email_or_username(username=username)
-        if user and user.check_user_password(password):
-            return True
-        else:
-            return False
-
-
 def authenticate(is_user_valid_func):
     def auth(func):
         @wraps(func)

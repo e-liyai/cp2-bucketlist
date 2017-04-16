@@ -19,7 +19,6 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from bucketlist.app import login_manager
 from bucketlist.controllers.database_controller import DatabaseController
-from bucketlist.controllers.authentication_controller import login_authentication
 
 
 db_username = 'admin'
