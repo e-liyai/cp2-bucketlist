@@ -13,9 +13,10 @@ from flask_login import LoginManager
 
 
 # Create flask application
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 
 app.config['SECRET_KEY'] = 'Bucketlist api application, keep your list updated'
+app.config.from_pyfile('config.py')
 
 # Configure authentication
 login_manager = LoginManager()
