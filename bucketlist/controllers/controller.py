@@ -19,6 +19,7 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from bucketlist.app import login_manager
 from bucketlist.controllers.database_controller import DatabaseController
+from bucketlist.controllers.authentication_controller import encode_auth_token, decode_auth_token
 
 
 db_username = 'admin'
@@ -94,21 +95,50 @@ def login():
     username = request.form['username']
     password = request.form['password']
 
-    validation_return = DATA_CONTROLLER.user_login_authentication(username=username, password=password)
-    if validation_return['status'] is True:
-        user = validation_return['User']
-        login_user(user, True)
+    try:
+        validation_return = DATA_CONTROLLER.user_login_authentication(username=username, password=password)
+        if validation_return['status'] is True:
+            user = validation_return['User']
+            login_user(user, True)
+            auth = request.authorization
 
-    auth = request.authorization
-    if not auth or validation_return['status'] is False:
-        resp = make_response("", 401)
-        resp.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
-        return resp
+            auth_token = encode_auth_token(user.user_id)
 
-    if validation_return['status'] is True:
-        return jsonify({"success": "Successful login"})
-    else:
-        return make_response("", 401)
+            if auth_token:
+                response_data = {
+                    'STATUS': 'success',
+                    'MESSAGE': 'Successfully logged in.',
+                    'AUTH_TOKEN': decode_auth_token(auth_token)
+                }
+                data_response = make_response(jsonify(response_data), 200)
+                data_response.headers['STATUS'] = 'success'
+                data_response.headers['TOKEN'] = auth_token
+                return data_response
+        else:
+            response_data = {
+                'STATUS': 'fail',
+                'MESSAGE': 'User does not exist.'
+            }
+            return make_response(jsonify(response_data)), 404
+
+    except ValueError as err:
+        tmp_response = make_response("", 500)
+        tmp_response.headers["STATUS"] = 'fail'
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
+        return tmp_response
+
+    # auth = request.authorization
+    # if not auth or validation_return['status'] is False:
+    #
+    #     resp = make_response("", 401)
+    #     resp.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
+    #     return resp
+    #
+    # if validation_return['status'] is True:
+    #     return jsonify({"success": "Successful login"})
+    # else:
+    #     return make_response("", 401)
 
 
 def users(serialize=True):
@@ -153,13 +183,28 @@ def add_user():
     username = request.form["username"]
     password = request.form["password"]
 
-    new_user = DATA_CONTROLLER.create_user(first_name=first_name,
-                                           last_name=last_name,
-                                           email=email,
-                                           username=username,
-                                           password=password)
+    try:
+        new_user = DATA_CONTROLLER.create_user(first_name=first_name,
+                                               last_name=last_name,
+                                               email=email,
+                                               username=username,
+                                               password=password)
 
-    return jsonify({"new_user": new_user})
+        # generate the auth token
+        auth_token = encode_auth_token(new_user['user_id'])
+
+        return jsonify({
+                        'STATUS': 'success',
+                        'MESSAGE': 'Successfully registered.',
+                        'AUTH_TOKEN': auth_token.decode(),
+                        'USER': new_user
+                    })
+    except ValueError as err:
+        tmp_response = make_response("", 401)
+        tmp_response.headers["STATUS"] = 'fail'
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
+        return tmp_response
 
 
 def user_by_id(user_id):
@@ -178,6 +223,10 @@ def user_by_id(user_id):
         if user with id is not found 404 page is returned
         """
         abort(404)
+        return jsonify({
+            'STATUS': 'Fail',
+            'MESSAGE': 'User with provided id does not exist',
+        })
 
 
 def update_user(user_id):
@@ -255,29 +304,70 @@ def bucketlist(bucket_id=None, serialize=True):
     :param serialize: Serialize helps indicate the format of the response
     :return: Json format or plain text depending in the serialize parameter
     """
-    bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
-    page = request.args.get("limit")
-    if page:
-        number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
-        converted_page = int(page)
 
-        if converted_page > number_of_pages or converted_page < 0:
-            return make_response("", 404)
+    auth_header = request.headers.get('Authorization')
+    auth_token = request.headers.get('TOKEN')
 
-        from_index = converted_page * PAGE_SIZE - 1
-        to_index = from_index + PAGE_SIZE
-
-        bucketlists = bucketlists[from_index:to_index]
-
-    if serialize:
-        data = {"bucketlists": bucketlists, "total": len(bucketlists)}
-        json_data = json.dumps(data)
-        response = make_response(jsonify(data), 200)
-        response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
-        response.headers["Cache-Control"] = "private, max-age=300"
-        return response
+    print('*************************************************')
+    print(auth_token)
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
     else:
-        return bucketlists
+        auth_token = ''
+
+    if auth_token:
+        resp = decode_auth_token(auth_token)
+        if not isinstance(resp, str):
+            if current_user == resp:
+                responseObject = {
+                    'status': 'success',
+                    'data': {
+                        'user_id': current_user
+                    }
+                }
+                return make_response(jsonify(responseObject)), 200
+            else:
+                responseObject = {
+                    'status': 'fail',
+                    'message': resp
+                }
+                return make_response(jsonify(responseObject)), 401
+
+        responseObject = {
+            'status': 'fail',
+            'message': resp
+        }
+        return make_response(jsonify(responseObject)), 401
+    else:
+        responseObject = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return make_response(jsonify(responseObject)), 401
+
+    # bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
+    # page = request.args.get("limit")
+    # if page:
+    #     number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
+    #     converted_page = int(page)
+    #
+    #     if converted_page > number_of_pages or converted_page < 0:
+    #         return make_response("", 404)
+    #
+    #     from_index = converted_page * PAGE_SIZE - 1
+    #     to_index = from_index + PAGE_SIZE
+    #
+    #     bucketlists = bucketlists[from_index:to_index]
+    #
+    # if serialize:
+    #     data = {"bucketlists": bucketlists, "total": len(bucketlists)}
+    #     json_data = json.dumps(data)
+    #     response = make_response(jsonify(data), 200)
+    #     response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
+    #     response.headers["Cache-Control"] = "private, max-age=300"
+    #     return response
+    # else:
+    #     return bucketlists
 
 
 def update_bucketlist(bucket_id):
