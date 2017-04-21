@@ -8,6 +8,7 @@ Desc      : Controller file processes request from the api endpoints
 # ============================================================================
 # necessary imports
 # ============================================================================
+import os
 import hashlib
 import json
 
@@ -19,16 +20,15 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from bucketlist.app import login_manager
 from bucketlist.controllers.database_controller import DatabaseController
-from bucketlist.controllers.authentication_controller import encode_auth_token, decode_auth_token
+from bucketlist.controllers.authentication_controller import encode_auth_token, check_token, decode_auth_token
 
+BUCKETLIST_DATABASE = os.environ['BUCKETLIST_SQLALCHEMY_DATABASE_URI']
 
-db_username = 'admin'
-db_password = 'admin'
-database = 'bucketlist'
-host = 'localhost'
-
+#
 # Database engine
-db_engine = 'postgresql+psycopg2://{0}:{1}@{3}/{2}'.format(db_username, db_password, database, host)
+# Postgres connection postgresql+psycopg2://user:password@host/database
+#
+db_engine = 'postgresql+psycopg2://admin:admin@localhost/bucketlist'
 
 PAGE_SIZE = 2
 
@@ -100,15 +100,13 @@ def login():
         if validation_return['status'] is True:
             user = validation_return['User']
             login_user(user, True)
-            auth = request.authorization
 
             auth_token = encode_auth_token(user.user_id)
 
             if auth_token:
                 response_data = {
                     'STATUS': 'success',
-                    'MESSAGE': 'Successfully logged in.',
-                    'AUTH_TOKEN': decode_auth_token(auth_token)
+                    'MESSAGE': 'Successfully logged in.'
                 }
                 data_response = make_response(jsonify(response_data), 200)
                 data_response.headers['STATUS'] = 'success'
@@ -127,18 +125,6 @@ def login():
         tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
         tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
-
-    # auth = request.authorization
-    # if not auth or validation_return['status'] is False:
-    #
-    #     resp = make_response("", 401)
-    #     resp.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
-    #     return resp
-    #
-    # if validation_return['status'] is True:
-    #     return jsonify({"success": "Successful login"})
-    # else:
-    #     return make_response("", 401)
 
 
 def users(serialize=True):
@@ -295,6 +281,7 @@ def create_bucketlist():
     })
 
 
+@check_token
 def bucketlist(bucket_id=None, serialize=True):
     """
 
@@ -305,69 +292,47 @@ def bucketlist(bucket_id=None, serialize=True):
     :return: Json format or plain text depending in the serialize parameter
     """
 
-    auth_header = request.headers.get('Authorization')
     auth_token = request.headers.get('TOKEN')
-
-    print('*************************************************')
-    print(auth_token)
-    if auth_header:
-        auth_token = auth_header.split(" ")[1]
-    else:
-        auth_token = ''
 
     if auth_token:
         resp = decode_auth_token(auth_token)
-        if not isinstance(resp, str):
-            if current_user == resp:
-                responseObject = {
-                    'status': 'success',
-                    'data': {
-                        'user_id': current_user
+        if resp['status']:
+            if current_user[0].user_id == resp['decode_data']:
+
+                bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
+
+                page = request.args.get("limit")
+                if page:
+                    number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
+                    converted_page = int(page)
+
+                    if converted_page > number_of_pages or converted_page < 0:
+                        return make_response("", 404)
+
+                    from_index = converted_page * PAGE_SIZE - 1
+                    to_index = from_index + PAGE_SIZE
+
+                    bucketlists = bucketlists[from_index:to_index]
+
+                if serialize:
+                    data = {
+                        'STATUS': 'success',
+                        "bucketlists": bucketlists,
+                        "total": len(bucketlists)
                     }
-                }
-                return make_response(jsonify(responseObject)), 200
-            else:
-                responseObject = {
-                    'status': 'fail',
-                    'message': resp
-                }
-                return make_response(jsonify(responseObject)), 401
-
-        responseObject = {
-            'status': 'fail',
-            'message': resp
-        }
-        return make_response(jsonify(responseObject)), 401
+                    json_data = json.dumps(data)
+                    response = make_response(jsonify(data), 200)
+                    response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
+                    response.headers["Cache-Control"] = "private, max-age=300"
+                    return response
+                else:
+                    return bucketlists
     else:
-        responseObject = {
-            'status': 'fail',
-            'message': 'Provide a valid auth token.'
+        response_object = {
+            'STATUS': 'fail',
+            'MESSAGE': 'Provide a valid auth token.'
         }
-        return make_response(jsonify(responseObject)), 401
-
-    # bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
-    # page = request.args.get("limit")
-    # if page:
-    #     number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
-    #     converted_page = int(page)
-    #
-    #     if converted_page > number_of_pages or converted_page < 0:
-    #         return make_response("", 404)
-    #
-    #     from_index = converted_page * PAGE_SIZE - 1
-    #     to_index = from_index + PAGE_SIZE
-    #
-    #     bucketlists = bucketlists[from_index:to_index]
-    #
-    # if serialize:
-    #     data = {"bucketlists": bucketlists, "total": len(bucketlists)}
-    #     json_data = json.dumps(data)
-    #     response = make_response(jsonify(data), 200)
-    #     response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
-    #     response.headers["Cache-Control"] = "private, max-age=300"
-    #     return response
-    # else:
-    #     return bucketlists
+        return make_response(jsonify(response_object)), 401
 
 
 def update_bucketlist(bucket_id):

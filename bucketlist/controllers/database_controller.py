@@ -191,13 +191,13 @@ class DatabaseController:
 
         all_bucketlists = []
 
-        if int(bucket_id) < 0:
-            raise ValueError('Parameter [bucket_id] should be positive!')
-
         if bucket_id is None:
             all_bucketlists = self.session.query(Bucketlist).order_by(Bucketlist.bucketlist_id).all()
         else:
-            all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).all()
+            if int(bucket_id) < 0:
+                raise ValueError('Parameter [bucket_id] should be positive!')
+            else:
+                all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).all()
 
         if serialize:
             return [bucketlist.serialize() for bucketlist in all_bucketlists]
