@@ -11,7 +11,7 @@ from flask import jsonify, render_template, current_app, abort
 
 from bucketlist.controllers.controller import add_user, users, delete_user
 from bucketlist.controllers.controller import create_bucketlist, bucketlist, update_bucketlist, delete_bucketlist
-from bucketlist.controllers.controller import create_item, update_item, delete_item, login
+from bucketlist.controllers.controller import create_item, update_item, delete_item, login, item
 from bucketlist.controllers.controller import populate_database, build_message, drop_tables, initialize_database
 
 
@@ -22,6 +22,7 @@ def initialize_api_routes(app):
         app.add_url_rule('/api/v1/delete_user/<string:user_id>', 'delete_user', delete_user, methods=['DELETE'])
         app.add_url_rule('/api/v1/bucketlists/', 'bucketlist', bucketlist, methods=['GET'])
         app.add_url_rule('/api/v1/users/', 'users', users, methods=['GET'])
+        app.add_url_rule('/api/v1/user/<string:user_id>', 'users', users, methods=['GET'])
         app.add_url_rule('/api/v1/bucketlists/', 'create_bucketlist', create_bucketlist, methods=['POST'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>', 'bucketlist_by_id', bucketlist, methods=['GET'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>',
@@ -30,6 +31,10 @@ def initialize_api_routes(app):
                          'delete_bucketlist', delete_bucketlist, methods=['DELETE'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items', 'create_bucketlist_item', create_item,
                          methods=['POST'])
+        app.add_url_rule('/api/v1/bucketlists/items/<string:item_id>', 'item', item,
+                         methods=['GET'])
+        app.add_url_rule('/api/v1/bucketlists/items', 'item', item,
+                         methods=['GET'])
         app.add_url_rule('/api/v1/bucketlists/items/<string:item_id>',
                          'update_bucketlist_item', update_item,
                          methods=['PUT'])

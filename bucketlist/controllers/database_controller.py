@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from bucketlist.models.bucketlist import Bucketlist
 from bucketlist.models.users import Users
 from bucketlist.models.bucketlist_items import BucketlistItems
-from bucketlist.models.initialize_db import init_bucketlist_database
+from bucketlist.models.initialize_db import init_bucketlist_database, drop_bucketlist_database
 
 
 class DatabaseController:
@@ -29,6 +29,7 @@ class DatabaseController:
             raise ValueError('The parameters specified in engine string are not supported by SQLAlchemy')
         self.engine = engine
         db_engine = create_engine(engine)
+        self.db_engine = db_engine
         db_session = sessionmaker(bind=db_engine)
         self.session = db_session()
 
@@ -44,9 +45,7 @@ class DatabaseController:
         drops the database tables and relationships
         :return: None
         """
-        BucketlistItems.__table__.drop(self.engine)
-        Bucketlist.__table__.drop(self.engine)
-        Users.__table__.drop(self.engine)
+        drop_bucketlist_database(self.db_engine)
 
     def create_user(self, first_name, last_name, username, email, password):
         """
@@ -103,13 +102,13 @@ class DatabaseController:
 
         all_users = []
 
-        if int(user_id) < 0:
-            raise ValueError('Parameter [user_id] should be positive!')
-
         if user_id is None:
             all_users = self.session.query(Users).order_by(Users.last_name).all()
         else:
-            all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
+            if int(user_id) < 0:
+                raise ValueError('Parameter [user_id] should be positive!')
+            else:
+                all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
 
         if serialize:
             return [user.serialize() for user in all_users]
@@ -280,13 +279,13 @@ class DatabaseController:
 
         all_items = []
 
-        if int(item_id) < 0:
-            raise ValueError('Parameter [item_id] should be positive!')
-
         if item_id is None:
             all_items = self.session.query(BucketlistItems).order_by(BucketlistItems.item_id).all()
         else:
-            all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).all()
+            if int(item_id) < 0:
+                raise ValueError('Parameter [item_id] should be positive!')
+            else:
+                all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).all()
 
         if serialize:
             return [item.serialize() for item in all_items]

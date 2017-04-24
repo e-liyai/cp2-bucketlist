@@ -22,13 +22,11 @@ from bucketlist.app import login_manager
 from bucketlist.controllers.database_controller import DatabaseController
 from bucketlist.controllers.authentication_controller import encode_auth_token, check_token, decode_auth_token
 
-BUCKETLIST_DATABASE = os.environ['BUCKETLIST_SQLALCHEMY_DATABASE_URI']
-
 #
 # Database engine
 # Postgres connection postgresql+psycopg2://user:password@host/database
 #
-db_engine = 'postgresql+psycopg2://admin:admin@localhost/bucketlist'
+db_engine = os.environ['BUCKETLIST_SQLALCHEMY_DATABASE_URI']
 
 PAGE_SIZE = 2
 
@@ -92,8 +90,12 @@ def login():
     :param serialize: Serialize helps indicate the format of the response
     :return: Json format or plain text depending in the serialize parameter
     """
-    username = request.form['username']
-    password = request.form['password']
+
+    data = request.data
+    data_dict = json.loads(data)
+
+    username = data_dict['username']
+    password = data_dict['password']
 
     try:
         validation_return = DATA_CONTROLLER.user_login_authentication(username=username, password=password)
@@ -106,7 +108,8 @@ def login():
             if auth_token:
                 response_data = {
                     'STATUS': 'success',
-                    'MESSAGE': 'Successfully logged in.'
+                    'MESSAGE': 'Successfully logged in.',
+                    'TOKEN': auth_token
                 }
                 data_response = make_response(jsonify(response_data), 200)
                 data_response.headers['STATUS'] = 'success'
@@ -127,15 +130,17 @@ def login():
         return tmp_response
 
 
-def users(serialize=True):
+@check_token
+def users(user_id=None, serialize=True):
     """
 
     The method returns users in a json responses. The json is hashed to increase security.
 
     :param serialize: Serialize helps indicate the format of the response
+    :param user_id: user id intended to be searched
     :return: Json format or plain text depending in the serialize parameter
     """
-    users = DATA_CONTROLLER.get_user_by_id(serialize=True)
+    users = DATA_CONTROLLER.get_user_by_id(user_id=user_id, serialize=True)
     page = request.args.get("limit")
     if page:
         number_of_pages = int(ceil(float(len(users)) / PAGE_SIZE))
@@ -162,12 +167,16 @@ def users(serialize=True):
         return users
 
 
+@check_token
 def add_user():
-    first_name = request.form["first_name"]
-    last_name = request.form["last_name"]
-    email = request.form["email"]
-    username = request.form["username"]
-    password = request.form["password"]
+    data = request.data
+    data_dict = json.loads(data)
+
+    first_name = data_dict["first_name"]
+    last_name = data_dict["last_name"]
+    email = data_dict["email"]
+    username = data_dict["username"]
+    password = data_dict["password"]
 
     try:
         new_user = DATA_CONTROLLER.create_user(first_name=first_name,
@@ -176,15 +185,15 @@ def add_user():
                                                username=username,
                                                password=password)
 
-        # generate the auth token
-        auth_token = encode_auth_token(new_user['user_id'])
-
-        return jsonify({
+        response_data = {
                         'STATUS': 'success',
                         'MESSAGE': 'Successfully registered.',
-                        'AUTH_TOKEN': auth_token.decode(),
                         'USER': new_user
-                    })
+                    }
+
+        data_response = make_response(jsonify(response_data), 201)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
     except ValueError as err:
         tmp_response = make_response("", 401)
         tmp_response.headers["STATUS"] = 'fail'
@@ -193,6 +202,7 @@ def add_user():
         return tmp_response
 
 
+@check_token
 def user_by_id(user_id):
     """
 
@@ -215,6 +225,7 @@ def user_by_id(user_id):
         })
 
 
+@check_token
 def update_user(user_id):
     """
 
@@ -223,15 +234,19 @@ def update_user(user_id):
     :param user_id: user id of the user to be updated
     :return: User json response
     """
+
+    data = request.data
+    data_dict = json.loads(data)
+
     new_user = {
-        "first_name": request.form["first_name"],
-        "last_name": request.form["last_name"],
-        "email": request.form["email"],
-        "username": request.form["username"]
+        "first_name": data_dict["first_name"],
+        "last_name": data_dict["last_name"],
+        "email": data_dict["email"],
+        "username": data_dict["username"]
     }
     updated_user = DATA_CONTROLLER.update_user(user_id, new_user)
     if not updated_user:
-        return make_response('', 204)
+        return make_response('', 201)
     else:
         return jsonify({"user": updated_user})
 
@@ -243,6 +258,7 @@ def get_error_code(error):
     return 8000
 
 
+@check_token
 def delete_user(user_id):
     """
 
@@ -263,6 +279,7 @@ def delete_user(user_id):
         return tmp_response
 
 
+@check_token
 def create_bucketlist():
     """
 
@@ -271,7 +288,11 @@ def create_bucketlist():
     :param : None
     :return: http response 
     """
-    bucketlist_name = request.form["name"]
+
+    data = request.data
+    data_dict = json.loads(data)
+
+    bucketlist_name = data_dict["name"]
     user = current_user
 
     new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, user[0].user_id)
@@ -335,6 +356,7 @@ def bucketlist(bucket_id=None, serialize=True):
         return make_response(jsonify(response_object)), 401
 
 
+@check_token
 def update_bucketlist(bucket_id):
     """
 
@@ -343,16 +365,21 @@ def update_bucketlist(bucket_id):
     :param bucket_id: id of the bucket list to be updated
     :return: bucket list json response
     """
+
+    data = request.data
+    data_dict = json.loads(data)
+
     new_bucket = {
-        "bucketlist_name": request.form["name"]
+        "bucketlist_name": data_dict["name"]
     }
     updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id, new_bucket)
     if not updated_bucket:
-        return make_response('', 204)
+        return make_response('', 201)
     else:
         return jsonify({"bucket_list": updated_bucket})
 
 
+@check_token
 def delete_bucketlist(bucket_id):
     """
 
@@ -373,6 +400,7 @@ def delete_bucketlist(bucket_id):
         return tmp_response
 
 
+@check_token
 def item(item_id=None, serialize=True):
     """
 
@@ -397,7 +425,7 @@ def item(item_id=None, serialize=True):
         items = items[from_index:to_index]
 
     if serialize:
-        data = {"bucketlists": items, "total": len(items)}
+        data = {"bucketlist_item": items, "total": len(items)}
         json_data = json.dumps(data)
         response = make_response(jsonify(data), 200)
         response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
@@ -407,6 +435,7 @@ def item(item_id=None, serialize=True):
         return items
 
 
+@check_token
 def create_item(bucket_id):
     """
 
@@ -415,8 +444,11 @@ def create_item(bucket_id):
     :param bucket_id: id of the bucket list to be deleted
     :return: http response 
     """
-    item_name = request.form["name"]
-    item_description = request.form["description"]
+    data = request.data
+    data_dict = json.loads(data)
+
+    item_name = data_dict["name"]
+    item_description = data_dict["description"]
 
     new_item_name = DATA_CONTROLLER.create_bucketlist_item(item_name, item_description, bucket_id)
 
@@ -425,6 +457,7 @@ def create_item(bucket_id):
     })
 
 
+@check_token
 def update_item(item_id):
     """
 
@@ -433,27 +466,30 @@ def update_item(item_id):
     :param item_id: id of the item to be updated
     :return: item json response
     """
+    data = request.data
+    data_dict = json.loads(data)
 
     date_completed = None
     done = False
-    if request.form["done"] == 'True':
+    if data_dict["done"] == 'True':
         done = True
         date_completed = datetime.now()
 
     new_item = {
-        "item_name": request.form["name"],
+        "item_name": data_dict["name"],
         "done": done,
-        "description": request.form["description"],
+        "description": data_dict["description"],
         "date_completed": date_completed
     }
 
     updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
-        return make_response('', 204)
+        return make_response('', 201)
     else:
         return jsonify({"bucket_list_item": updated_item})
 
 
+@check_token
 def delete_item(item_id):
     """
 
