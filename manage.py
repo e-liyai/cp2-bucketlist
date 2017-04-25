@@ -27,6 +27,7 @@ def initdb():
 @manager.command
 def populatedb():
     fill_database()
+    print('Database populated')
 
 
 @manager.command

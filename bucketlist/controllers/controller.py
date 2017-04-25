@@ -195,7 +195,7 @@ def add_user():
         data_response.headers['STATUS'] = 'success'
         return data_response
     except ValueError as err:
-        tmp_response = make_response("", 401)
+        tmp_response = make_response("", 500)
         tmp_response.headers["STATUS"] = 'fail'
         tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
         tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
@@ -289,17 +289,30 @@ def create_bucketlist():
     :return: http response 
     """
 
-    data = request.data
-    data_dict = json.loads(data)
+    try:
+        data = request.data
+        data_dict = json.loads(data)
 
-    bucketlist_name = data_dict["name"]
-    user = current_user
+        bucketlist_name = data_dict["name"]
+        user = current_user
 
-    new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, user[0].user_id)
+        new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, user[0].user_id)
 
-    return jsonify({
-        "bucket_name": new_bucket_name
-    })
+        response_data = {
+            'STATUS': 'success',
+            'MESSAGE': 'Bucket list successfully created.',
+            'BUCKET_LIST_NAME': new_bucket_name
+        }
+
+        data_response = make_response(jsonify(response_data), 201)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+    except ValueError as err:
+        tmp_response = make_response("", 500)
+        tmp_response.headers["STATUS"] = 'fail'
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
+        return tmp_response
 
 
 @check_token
@@ -374,9 +387,14 @@ def update_bucketlist(bucket_id):
     }
     updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id, new_bucket)
     if not updated_bucket:
-        return make_response('', 201)
+        data_response = make_response(jsonify(updated_bucket), 201)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
     else:
-        return jsonify({"bucket_list": updated_bucket})
+        tmp_response = make_response("", 500)
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = 8000
+        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = 'No data was updated'
+        return tmp_response
 
 
 @check_token

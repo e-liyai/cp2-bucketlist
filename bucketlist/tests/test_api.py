@@ -15,7 +15,7 @@ from unittest import TestCase
 from bucketlist.app import app
 
 
-class ViewsTest(TestCase):
+class APITest(TestCase):
 
     def setUp(self):
         app.config['TESTING'] = True
@@ -112,4 +112,59 @@ class ViewsTest(TestCase):
     def test_delete_user(self):
         print('=> delete user')
         response = self.app.delete('/api/v1/delete_user/3', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_bucketlist(self):
+        print('=> create bucket list')
+        data = {
+            'name': 'test_bucket_list'
+        }
+        json_data = json.dumps(data)
+        response = self.app.post('/api/v1/bucketlists/', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 201)
+
+    def test_update_bucketlist(self):
+        print('=> update bucketlist')
+        data = {
+            'name': 'updated_test_bucket_list'
+        }
+        json_data = json.dumps(data)
+        response = self.app.put('/api/v1/bucketlists/3', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 201)
+
+    def test_delete_bucketlist(self):
+        print('=> delete bucket list')
+        response = self.app.delete('/api/v1/bucketlists/3', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_all_bucket_list_item(self):
+        print('=> get bucket list item')
+        response = self.app.get('/api/v1/bucketlists/items', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_bucket_list_item(self):
+        print('=> get bucket list item by id')
+        response = self.app.get('/api/v1/bucketlists/items/1', headers={'TOKEN': self.data['TOKEN']})
+        resp_data = json.loads(response.data)
+        item = resp_data['bucketlist_item'][0]
+        self.assertIsNotNone(item)
+        self.assertEqual(response.status_code, 200)
+
+    def create_bucketlist_item(self):
+        print('=> create bucket list item')
+        data = {
+            "item_name": "test_bucketlist_item",
+            "description": "This is a test bucket list item"
+        }
+        json_data = json.dumps(data)
+        response = self.app.put('/api/v1/bucketlists/1/items', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+
+        resp_data = json.loads(response.data)
+        item = resp_data['bucketlist_item'][0]
+        self.assertGreater(item['item_id'], 1)
+        self.assertEqual(response.status_code, 201)
+
+    def test_delete_bucket_list_item(self):
+        print('=> delete bucket list item')
+        response = self.app.delete('/api/v1/bucketlists/items/6', headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 200)

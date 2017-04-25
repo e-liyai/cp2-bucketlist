@@ -25,14 +25,6 @@ class BucketlistItems(Model):
     description = Column(String(500))
     bucketlist = Column(Integer, ForeignKey('Bucketlist.bucketlist_id'))
 
-    @staticmethod
-    def get_by_item_id(cardid):
-        pass
-
-    @staticmethod
-    def return_all():
-        pass
-
     def serialize(self):
         """
         The method returns a dictionary of key value pair
