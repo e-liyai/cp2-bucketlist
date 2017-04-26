@@ -20,7 +20,6 @@ from datetime import datetime, timedelta
 
 from bucketlist.controllers.database_controller import DatabaseController
 
-TOKEN = hashlib.sha256("SAMPLE UNIQI TOKEN FOR USER").hexdigest()
 TOKEN_HEADER_NAME = "TOKEN"
 
 JWT_SECRET_TOKEN = os.environ['BUCKETLIST_SECRET_KEY']
@@ -64,28 +63,16 @@ def decode_auth_token(auth_token):
         return data
 
 
-def authenticate(is_user_valid_func):
-    def auth(func):
-        @wraps(func)
-        def decorated(*args, **kwargs):
-            auth = request.authorization
-            if not auth or not is_user_valid_func(username=auth.username, password=auth.password):
-                resp = make_response("", 401)
-                resp.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
-                return resp
-            return func(*args, **kwargs)
-        return decorated
-    return auth
-
-
 def check_token(func):
     @wraps(func)
     def decorated(*args, **kwargs):
         decode = decode_auth_token(request.headers[TOKEN_HEADER_NAME])
         if decode['status'] is False:
-            data = {"STATUS": 'fail', "message": decode['decode_data']}
-            json_data = json.dumps(data)
-            resp = make_response(jsonify(json_data), 401)
+            data = {
+                'STATUS': 'fail',
+                'MESSAGE': decode['decode_data']
+            }
+            resp = make_response(jsonify(data), 401)
             resp.headers["BUCKET-LIST-APP-ERROR-CODE"] = 9500
             resp.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = decode['decode_data']
             return resp

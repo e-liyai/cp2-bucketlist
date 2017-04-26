@@ -36,16 +36,18 @@ class DatabaseController:
     def initialize_database(self):
         """
         Initializes the database tables and relationships
-        :return: None
+        :return: String
         """
         init_bucketlist_database(self.engine)
+        return 'Database Initialized'
 
     def drop_tables(self):
         """
         drops the database tables and relationships
-        :return: None
+        :return: String
         """
         drop_bucketlist_database(self.db_engine)
+        return 'Database Dropped'
 
     def create_user(self, first_name, last_name, username, email, password):
         """

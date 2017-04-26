@@ -44,28 +44,28 @@ def initialize_api_routes(app):
         app.add_url_rule('/api/v1/', 'list_app_routes', list_app_routes, methods=['GET'], defaults={'app': app})
 
 
-def init_bucketlist_database():
-    initialize_database()
-
-
-def fill_database():
-    message_key = "Populating the Database"
-    try:
-        populate_database()
-    except ValueError as err:
-        return jsonify(build_message(message_key, err.message))
-
-    return jsonify(build_message(message_key, "OK"))
-
-
-def drop_database_tables():
-    message_key = "Dropping database tables"
-    try:
-        drop_tables()
-    except ValueError as err:
-        return jsonify(build_message(message_key, err.message))
-
-    return jsonify(build_message(message_key, "OK"))
+# def init_bucketlist_database():
+#     initialize_database()
+#
+#
+# def fill_database():
+#     message_key = "Populating the Database"
+#     try:
+#         populate_database()
+#     except ValueError as err:
+#         return jsonify(build_message(message_key, err.message))
+#
+#     return jsonify(build_message(message_key, "OK"))
+#
+#
+# def drop_database_tables():
+#     message_key = "Dropping database tables"
+#     try:
+#         drop_tables()
+#     except ValueError as err:
+#         return jsonify(build_message(message_key, err.message))
+#
+#     return jsonify(build_message(message_key, "OK"))
 
 
 def list_app_routes(app):
