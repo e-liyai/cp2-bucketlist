@@ -246,9 +246,19 @@ def update_user(user_id):
     }
     updated_user = DATA_CONTROLLER.update_user(user_id, new_user)
     if not updated_user:
-        return make_response('', 201)
+        data = {
+            "STATUS": 'fail',
+            "MESSAGE": 'Error updating user'
+        }
+        response = make_response(jsonify(data), 500)
+        return response
     else:
-        return jsonify({"user": updated_user})
+        data = {
+            "STATUS": 'success',
+            "updated_user": updated_user
+        }
+        response = make_response(jsonify(data), 201)
+        return response
 
 
 def get_error_code(error):
@@ -386,8 +396,12 @@ def update_bucketlist(bucket_id):
         "bucketlist_name": data_dict["name"]
     }
     updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id, new_bucket)
-    if not updated_bucket:
-        data_response = make_response(jsonify(updated_bucket), 201)
+    if updated_bucket:
+        data = {
+            'STATUS': 'success',
+            'bucketlist': updated_bucket
+        }
+        data_response = make_response(jsonify(data), 201)
         data_response.headers['STATUS'] = 'success'
         return data_response
     else:
@@ -502,9 +516,19 @@ def update_item(item_id):
 
     updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
-        return make_response('', 201)
+        data = {
+            "STATUS": 'fail',
+            "MESSAGE": 'Error updating item'
+        }
+        response = make_response(jsonify(data), 500)
+        return response
     else:
-        return jsonify({"bucket_list_item": updated_item})
+        data = {
+            "STATUS": 'success',
+            "bucket_list_item": updated_item
+        }
+        response = make_response(jsonify(data), 201)
+        return response
 
 
 @check_token

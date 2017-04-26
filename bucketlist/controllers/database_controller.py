@@ -308,20 +308,20 @@ class DatabaseController:
 
         return searched_user
 
-    def get_by_email(self, email=None):
-        """
-        If the email parameter is  provided, the application looks up the user with the email provided.
-
-        :param email: The email of the user intended to be searched(default value is None)
-        :return: The user with the matching email.
-        """
-
-        searched_user = None
-
-        if email:
-            searched_user = self.session.query(Users).filter_by(email=email).first()
-
-        return searched_user
+    # def get_by_email(self, email=None):
+    #     """
+    #     If the email parameter is  provided, the application looks up the user with the email provided.
+    #
+    #     :param email: The email of the user intended to be searched(default value is None)
+    #     :return: The user with the matching email.
+    #     """
+    #
+    #     searched_user = None
+    #
+    #     if email:
+    #         searched_user = self.session.query(Users).filter_by(email=email).first()
+    #
+    #     return searched_user
 
     def update_bucketlist_item(self, item_id, new_item):
         """
@@ -367,12 +367,6 @@ class DatabaseController:
         """
         if username and password:
             user = self.get_user_by_email_or_username(username=username)
-            if user and user.check_user_password(password):
-                return {'status': True, 'User': user}
-            else:
-                return {'status': False, 'User': None}
-        elif email and password:
-            user = self.get_user_by_email_or_username(email=email)
             if user and user.check_user_password(password):
                 return {'status': True, 'User': user}
             else:
