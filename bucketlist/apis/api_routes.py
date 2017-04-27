@@ -7,12 +7,11 @@ Desc      : Routing api endpoints
 # ============================================================================
 # necessary imports
 # ============================================================================
-from flask import jsonify, render_template, current_app, abort
+from flask import jsonify
 
 from bucketlist.controllers.controller import add_user, users, delete_user, update_user
 from bucketlist.controllers.controller import create_bucketlist, bucketlist, update_bucketlist, delete_bucketlist
 from bucketlist.controllers.controller import create_item, update_item, delete_item, login, item
-from bucketlist.controllers.controller import populate_database, build_message, drop_tables, initialize_database
 
 
 def initialize_api_routes(app):
@@ -43,30 +42,6 @@ def initialize_api_routes(app):
                          'delete_bucketlist_item', delete_item,
                          methods=['DELETE'])
         app.add_url_rule('/api/v1/', 'list_app_routes', list_app_routes, methods=['GET'], defaults={'app': app})
-
-
-# def init_bucketlist_database():
-#     initialize_database()
-#
-#
-# def fill_database():
-#     message_key = "Populating the Database"
-#     try:
-#         populate_database()
-#     except ValueError as err:
-#         return jsonify(build_message(message_key, err.message))
-#
-#     return jsonify(build_message(message_key, "OK"))
-#
-#
-# def drop_database_tables():
-#     message_key = "Dropping database tables"
-#     try:
-#         drop_tables()
-#     except ValueError as err:
-#         return jsonify(build_message(message_key, err.message))
-#
-#     return jsonify(build_message(message_key, "OK"))
 
 
 def list_app_routes(app):

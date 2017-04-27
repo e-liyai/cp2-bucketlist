@@ -167,7 +167,6 @@ def users(user_id=None, serialize=True):
         return users
 
 
-@check_token
 def add_user():
     data = request.data
     data_dict = json.loads(data)
@@ -422,9 +421,21 @@ def delete_bucketlist(bucket_id):
     """
     try:
         if DATA_CONTROLLER.delete_bucketlist(bucket_id):
-            return make_response("", 200)
+            data = {
+                'STATUS': 'Success',
+                'MESSAGE': 'Database with id '+bucket_id+' successfully deleted'
+            }
+            data_response = make_response(jsonify(data), 200)
+            data_response.headers['STATUS'] = 'success'
+            return data_response
         else:
-            return make_response("", 404)
+            data = {
+                'STATUS': 'Error',
+                'MESSAGE': 'Bucketlist ID cannot be found, or database encountered an error.'
+            }
+            data_response = make_response(jsonify(data), 500)
+            data_response.headers['STATUS'] = 'fail'
+            return data_response
     except ValueError as err:
         tmp_response = make_response("", 500)
         tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
