@@ -183,11 +183,12 @@ class DatabaseController:
 
         return created_bucketlist.bucketlist_name
 
-    def get_bucketlist_by_id(self, bucket_id=None, serialize=False):
+    def get_bucketlist_by_id(self, bucket_id=None, user=None, serialize=False):
         """
         If the bucket_id parameter is  provided, the application looks up the buketlist with the provided id,
         else it returns all the bucketlists in the database
 
+        :param user: id of user who owns the bucketlist
         :param bucket_id: The id of the bucketlist intended to be searched(default value is None)
         :return: The bucketlist with the matching id or all bucketlists.
         """
@@ -195,12 +196,13 @@ class DatabaseController:
         all_bucketlists = []
 
         if bucket_id is None:
-            all_bucketlists = self.session.query(Bucketlist).order_by(Bucketlist.bucketlist_id).all()
+            all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user).all()
         else:
             if int(bucket_id) < 0:
                 raise ValueError('Parameter [bucket_id] should be positive!')
             else:
-                all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).all()
+                all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user)\
+                    .filter(Bucketlist.bucketlist_id == bucket_id).all()
 
         if serialize:
             return [bucketlist.serialize() for bucketlist in all_bucketlists]
@@ -275,12 +277,13 @@ class DatabaseController:
 
         return new_bucketlist_item.item_name
 
-    def get_item_by_id(self, item_id=None, serialize=False):
+    def get_item_by_id(self, item_id=None, bucket_id=None, serialize=False):
         """
         If the item_id parameter is  provided, the application looks up the item with the id, in the bucket lists
         available,
         else it returns all the items in the bucket list
-
+        
+        :param bucket_id: bucket list id
         :param item_id: The id of the bucketlist intended to be searched(default value is None)
         :return: The bucketlist with the matching id or all bucketlists.
         """
@@ -288,12 +291,14 @@ class DatabaseController:
         all_items = []
 
         if item_id is None:
-            all_items = self.session.query(BucketlistItems).order_by(BucketlistItems.item_id).all()
+            all_items = self.session.query(BucketlistItems).filter(BucketlistItems.bucketlist == bucket_id).all()
         else:
-            if int(item_id) < 0:
-                raise ValueError('Parameter [item_id] should be positive!')
+            if int(item_id) < 0 or not isinstance(item_id, int):
+                return all_items
             else:
-                all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).all()
+                all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
+                    .filter(BucketlistItems.bucketlist == bucket_id)\
+                    .all()
 
         if serialize:
             return [item.serialize() for item in all_items]

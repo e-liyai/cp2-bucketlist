@@ -342,7 +342,8 @@ def bucketlist(bucket_id=None, serialize=True):
         if resp['status']:
             if current_user[0].user_id == resp['decode_data']:
 
-                bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, serialize=True)
+                bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, user=current_user[0].user_id,
+                                                                   serialize=True)
 
                 page = request.args.get("limit")
                 if page:
@@ -444,16 +445,29 @@ def delete_bucketlist(bucket_id):
 
 
 @check_token
-def item(item_id=None, serialize=True):
+def item(item_id=None, bucket_id=None, serialize=True):
     """
 
     The method returns items in a json responses.
 
     :param item_id: id of item to be retrieved
+    :param bucket_id: id of bucket list to which the item belongs
     :param serialize: Serialize helps indicate the format of the response
     :return: Json format or plain text depending in the serialize parameter
     """
-    items = DATA_CONTROLLER.get_item_by_id(item_id=item_id, serialize=True)
+    items = DATA_CONTROLLER.get_item_by_id(item_id=item_id, bucket_id=bucket_id, serialize=True)
+
+    if item_id:
+
+        if not items:
+            data = {
+                'STATUS': 'fail',
+                'MESSAGE': 'The user has no item with provided ID in any of the bucket lists'
+            }
+            data_response = make_response(jsonify(data), 404)
+            data_response.headers['STATUS'] = 'fail'
+            return data_response
+
     page = request.args.get("limit")
     if page:
         number_of_pages = int(ceil(float(len(items)) / PAGE_SIZE))
