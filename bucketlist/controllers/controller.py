@@ -160,7 +160,9 @@ def users(user_id=None, serialize=True):
         response = make_response(jsonify(data), 200)
 
         # Caching
-        response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())  # Entity tag uniquely identifies request
+        response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
+
+        # Entity tag uniquely identifies request
         response.headers["Cache-Control"] = "private, max-age=300"
         return response
     else:
@@ -353,7 +355,7 @@ def bucketlist(bucket_id=None, serialize=True):
                     if converted_page > number_of_pages or converted_page < 0:
                         return make_response("", 404)
 
-                    from_index = converted_page * PAGE_SIZE - 1
+                    from_index = (converted_page - 1) * PAGE_SIZE
                     to_index = from_index + PAGE_SIZE
 
                     bucketlists = bucketlists[from_index:to_index]
