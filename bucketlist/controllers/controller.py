@@ -142,6 +142,7 @@ def users(user_id=None, serialize=True):
     """
     users = DATA_CONTROLLER.get_user_by_id(user_id=user_id, serialize=True)
     page = request.args.get("limit")
+    number_of_pages = None
     if page:
         number_of_pages = int(ceil(float(len(users)) / PAGE_SIZE))
         converted_page = int(page)
@@ -149,13 +150,17 @@ def users(user_id=None, serialize=True):
         if converted_page > number_of_pages or converted_page < 0:
             return make_response("", 404)
 
-        from_index = converted_page * PAGE_SIZE - 1
+        from_index = (converted_page - 1) * PAGE_SIZE
         to_index = from_index + PAGE_SIZE
 
         users = users[from_index:to_index]
 
     if serialize:
-        data = {"users": users, "total": len(users)}
+        data = {
+            "users": users,
+            "total": len(users),
+            "pages": number_of_pages
+        }
         json_data = json.dumps(data)
         response = make_response(jsonify(data), 200)
 
@@ -348,6 +353,7 @@ def bucketlist(bucket_id=None, serialize=True):
                                                                    serialize=True)
 
                 page = request.args.get("limit")
+                number_of_pages = None
                 if page:
                     number_of_pages = int(ceil(float(len(bucketlists)) / PAGE_SIZE))
                     converted_page = int(page)
@@ -364,7 +370,8 @@ def bucketlist(bucket_id=None, serialize=True):
                     data = {
                         'STATUS': 'success',
                         "bucketlists": bucketlists,
-                        "total": len(bucketlists)
+                        "total": len(bucketlists),
+                        "pages": number_of_pages
                     }
                     json_data = json.dumps(data)
                     response = make_response(jsonify(data), 200)
@@ -471,6 +478,7 @@ def item(item_id=None, bucket_id=None, serialize=True):
             return data_response
 
     page = request.args.get("limit")
+    number_of_pages = None
     if page:
         number_of_pages = int(ceil(float(len(items)) / PAGE_SIZE))
         converted_page = int(page)
@@ -478,13 +486,17 @@ def item(item_id=None, bucket_id=None, serialize=True):
         if converted_page > number_of_pages or converted_page < 0:
             return make_response("", 404)
 
-        from_index = converted_page * PAGE_SIZE - 1
+        from_index = (converted_page - 1) * PAGE_SIZE
         to_index = from_index + PAGE_SIZE
 
         items = items[from_index:to_index]
 
     if serialize:
-        data = {"bucketlist_item": items, "total": len(items)}
+        data = {
+            "bucketlist_item": items,
+            "total": len(items)
+            "pages": number_of_pages
+        }
         json_data = json.dumps(data)
         response = make_response(jsonify(data), 200)
         response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
