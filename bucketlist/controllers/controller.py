@@ -494,7 +494,7 @@ def item(item_id=None, bucket_id=None, serialize=True):
     if serialize:
         data = {
             "bucketlist_item": items,
-            "total": len(items)
+            "total": len(items),
             "pages": number_of_pages
         }
         json_data = json.dumps(data)
