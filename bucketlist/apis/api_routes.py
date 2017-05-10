@@ -9,7 +9,7 @@ Desc      : Routing api endpoints
 # ============================================================================
 from flask import jsonify
 
-from bucketlist.controllers.controller import add_user, users, delete_user, update_user
+from bucketlist.controllers.controller import add_user, users, delete_user, update_user, search
 from bucketlist.controllers.controller import create_bucketlist, bucketlist, update_bucketlist, delete_bucketlist
 from bucketlist.controllers.controller import create_item, update_item, delete_item, login, item
 
@@ -21,6 +21,7 @@ def initialize_api_routes(app):
         app.add_url_rule('/api/v1/delete_user/<string:user_id>', 'delete_user', delete_user, methods=['DELETE'])
         app.add_url_rule('/api/v1/bucketlists/', 'bucketlist', bucketlist, methods=['GET'])
         app.add_url_rule('/api/v1/users/', 'users', users, methods=['GET'])
+        app.add_url_rule('/api/v1/search/<search_value>', 'search', search, methods=['GET'])
         app.add_url_rule('/api/v1/user/<string:user_id>', 'users', users, methods=['GET'])
         app.add_url_rule('/api/v1/user/<string:user_id>', 'update_user', update_user, methods=['PUT'])
         app.add_url_rule('/api/v1/bucketlists/', 'create_bucketlist', create_bucketlist, methods=['POST'])

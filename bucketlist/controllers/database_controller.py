@@ -350,6 +350,28 @@ class DatabaseController:
 
         return updated_item.serialize()
 
+    def search_database(self, search_value, user, serialize=False):
+        """
+
+        The search method searches bucket list database.
+
+        :param search_value: value to be searched
+        :param user: owner of bucketlist
+        :return: item with the matching value.
+        """
+
+        all_bucketlists = []
+
+        if search_value:
+            all_bucketlists = self.session.query(Bucketlist).filter(
+                Bucketlist.bucketlist_name.like('%{}%'.format(search_value)))\
+                .filter(Bucketlist.user == user).all()
+
+        if serialize:
+            return [bucketlist.serialize() for bucketlist in all_bucketlists]
+        else:
+            return all_bucketlists
+
     def user_login_authentication(self, username=None, email=None, password=None):
         """
         The method checks for username/email and password match in the database

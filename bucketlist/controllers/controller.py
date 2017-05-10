@@ -321,7 +321,7 @@ def create_bucketlist():
                 'STATUS': 'fail',
                 'MESSAGE': 'Invalid token provided'
             }
-            data_response = make_response(jsonify(data), 201)
+            data_response = make_response(jsonify(data), 401)
             data_response.headers['STATUS'] = 'success'
             return data_response
 
@@ -421,7 +421,7 @@ def update_bucketlist(bucket_id):
             'STATUS': 'fail',
             'MESSAGE': 'Invalid token provided'
         }
-        data_response = make_response(jsonify(data), 201)
+        data_response = make_response(jsonify(data), 401)
         data_response.headers['STATUS'] = 'success'
         return data_response
 
@@ -616,3 +616,47 @@ def delete_item(item_id):
         tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
         tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
+
+
+@check_token
+def search(search_value):
+    """
+
+    The search method searches bucket list database.
+
+    :param search_value: value to be searched
+    :return: http response
+    """
+    auth_token = request.headers.get('TOKEN')
+    resp = decode_auth_token(auth_token)
+    if not resp['status']:
+        data = {
+            'STATUS': 'fail',
+            'MESSAGE': 'Invalid token provided'
+        }
+        data_response = make_response(jsonify(data), 401)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+
+    search_result = DATA_CONTROLLER.search_database(search_value, resp['decode_data'], serialize=True)
+
+    if search_result:
+        response_data = {
+            'STATUS': 'success',
+            'SEARCH': search_result
+        }
+
+        data_response = make_response(jsonify(response_data), 200)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+    else:
+        response_data = {
+            'STATUS': 'fail',
+            'MESSAGE': 'No bucket list with search phrase found'
+        }
+
+        data_response = make_response(jsonify(response_data), 404)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+
+
