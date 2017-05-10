@@ -556,7 +556,7 @@ def create_item(bucket_id):
 
 
 @check_token
-def update_item(item_id, bucket_id):
+def update_item(item_id):
     """
 
     The method updates item with provided the id, and returns a json responses.
@@ -580,7 +580,7 @@ def update_item(item_id, bucket_id):
         "date_completed": date_completed
     }
 
-    updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, bucket_id, new_item)
+    updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
     if not updated_item:
         data = {
             "STATUS": 'fail',

@@ -35,7 +35,7 @@ def initialize_api_routes(app):
                          methods=['GET'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items/<string:item_id>', 'item', item,
                          methods=['GET'])
-        app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items/<string:item_id>',
+        app.add_url_rule('/api/v1/bucketlists/update-item/<string:item_id>',
                          'update_item', update_item,
                          methods=['PUT'])
         app.add_url_rule('/api/v1/bucketlists/items/<string:item_id>',

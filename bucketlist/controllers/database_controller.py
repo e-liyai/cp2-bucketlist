@@ -297,7 +297,6 @@ class DatabaseController:
                 return all_items
             else:
                 all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
-                    .filter(BucketlistItems.bucketlist == bucket_id)\
                     .all()
 
         if serialize:
@@ -319,7 +318,7 @@ class DatabaseController:
 
         return searched_user
 
-    def update_bucketlist_item(self, item_id=None, bucket_id=None, new_item=None):
+    def update_bucketlist_item(self, item_id=None, new_item=None):
         """
         The application looks up the item with the provided item_id
         in order to update the items's details
@@ -330,9 +329,8 @@ class DatabaseController:
         :return: The item with the matching id.
         """
         updated_item = None
-        items = self.get_item_by_id(item_id, bucket_id)
+        items = self.get_item_by_id(item_id=item_id)
         item = None
-
         if int(item_id) < 0:
             raise ValueError('Parameter [item_id] should be positive!')
 
