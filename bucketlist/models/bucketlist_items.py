@@ -35,6 +35,7 @@ class BucketlistItems(Model):
             "item_name": self.item_name,
             "date_created": self.date_created.isoformat() if self.date_created else "",
             "date_completed": self.date_completed.isoformat() if self.date_completed else "",
+            "done": self.done,
             "description": self.description,
             "bucketlist": self.bucketlist
         }

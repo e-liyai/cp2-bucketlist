@@ -15,7 +15,7 @@ import json
 from math import ceil
 from datetime import datetime
 
-from flask import jsonify, request, abort, make_response
+from flask import jsonify, request, abort, make_response, session
 from flask_login import login_required, login_user, logout_user, current_user
 
 from bucketlist.app import login_manager
@@ -101,7 +101,8 @@ def login():
         validation_return = DATA_CONTROLLER.user_login_authentication(username=username, password=password)
         if validation_return['status'] is True:
             user = validation_return['User']
-            login_user(user, True)
+            login_user(user, remember=True)
+            session['user_id'] = user.user_id
 
             auth_token = encode_auth_token(user.user_id)
 
@@ -118,7 +119,7 @@ def login():
         else:
             response_data = {
                 'STATUS': 'fail',
-                'MESSAGE': 'User does not exist.'
+                'MESSAGE': 'Username or password provided does not match.'
             }
             return make_response(jsonify(response_data)), 404
 
@@ -312,7 +313,19 @@ def create_bucketlist():
         bucketlist_name = data_dict["name"]
         user = current_user
 
-        new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, user[0].user_id)
+        auth_token = request.headers.get('TOKEN')
+        resp = decode_auth_token(auth_token)
+
+        if not resp['status']:
+            data = {
+                'STATUS': 'fail',
+                'MESSAGE': 'Invalid token provided'
+            }
+            data_response = make_response(jsonify(data), 201)
+            data_response.headers['STATUS'] = 'success'
+            return data_response
+
+        new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, resp['decode_data'])
 
         response_data = {
             'STATUS': 'success',
@@ -347,9 +360,9 @@ def bucketlist(bucket_id=None, serialize=True):
     if auth_token:
         resp = decode_auth_token(auth_token)
         if resp['status']:
-            if current_user[0].user_id == resp['decode_data']:
+            if resp['decode_data']:
 
-                bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, user=current_user[0].user_id,
+                bucketlists = DATA_CONTROLLER.get_bucketlist_by_id(bucket_id=bucket_id, user=resp['decode_data'],
                                                                    serialize=True)
 
                 page = request.args.get("limit")
@@ -401,10 +414,22 @@ def update_bucketlist(bucket_id):
     data = request.data
     data_dict = json.loads(data)
 
+    auth_token = request.headers.get('TOKEN')
+    resp = decode_auth_token(auth_token)
+    if not resp['status']:
+        data = {
+            'STATUS': 'fail',
+            'MESSAGE': 'Invalid token provided'
+        }
+        data_response = make_response(jsonify(data), 201)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+
     new_bucket = {
         "bucketlist_name": data_dict["name"]
     }
-    updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id, new_bucket)
+    updated_bucket = DATA_CONTROLLER.update_bucketlist(bucket_id=bucket_id, new_bucketlist=new_bucket,
+                                                       user=resp['decode_data'])
     if updated_bucket:
         data = {
             'STATUS': 'success',
@@ -522,14 +547,16 @@ def create_item(bucket_id):
     item_description = data_dict["description"]
 
     new_item_name = DATA_CONTROLLER.create_bucketlist_item(item_name, item_description, bucket_id)
-
-    return jsonify({
-        "item_name": new_item_name
-    })
+    data = {
+        "STATUS": 'success',
+        "bucket_list_item": new_item_name
+    }
+    response = make_response(jsonify(data), 201)
+    return response
 
 
 @check_token
-def update_item(item_id):
+def update_item(item_id, bucket_id):
     """
 
     The method updates item with provided the id, and returns a json responses.
@@ -553,7 +580,7 @@ def update_item(item_id):
         "date_completed": date_completed
     }
 
-    updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, new_item)
+    updated_item = DATA_CONTROLLER.update_bucketlist_item(item_id, bucket_id, new_item)
     if not updated_item:
         data = {
             "STATUS": 'fail',

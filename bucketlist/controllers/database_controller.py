@@ -209,7 +209,7 @@ class DatabaseController:
         else:
             return all_bucketlists
 
-    def update_bucketlist(self, bucket_id, new_bucketlist):
+    def update_bucketlist(self, bucket_id=None, new_bucketlist=None, user=None):
         """
         The application looks up the bucketlist with the provided bucket_id
         in order to update the bucketlist's details
@@ -223,7 +223,7 @@ class DatabaseController:
             raise ValueError('Parameter [bucket_id] should be positive!')
 
         updated_bucketlist = None
-        bucketlists = self.get_bucketlist_by_id(bucket_id)
+        bucketlists = self.get_bucketlist_by_id(bucket_id=bucket_id, user=user)
         bucketlist = None
         if len(bucketlists) is not 1:
             return updated_bucketlist
@@ -234,7 +234,7 @@ class DatabaseController:
             bucketlist.bucketlist_name = new_bucketlist["bucketlist_name"]
             self.session.add(bucketlist)
             self.session.commit()
-            updated_bucketlist = self.get_bucketlist_by_id(bucket_id)[0]
+            updated_bucketlist = self.get_bucketlist_by_id(bucket_id=bucket_id, user=user)[0]
 
         return updated_bucketlist.serialize()
 
@@ -293,7 +293,7 @@ class DatabaseController:
         if item_id is None:
             all_items = self.session.query(BucketlistItems).filter(BucketlistItems.bucketlist == bucket_id).all()
         else:
-            if int(item_id) < 0 or not isinstance(item_id, int):
+            if int(item_id) < 0:
                 return all_items
             else:
                 all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
@@ -319,18 +319,18 @@ class DatabaseController:
 
         return searched_user
 
-    def update_bucketlist_item(self, item_id, new_item):
+    def update_bucketlist_item(self, item_id=None, bucket_id=None, new_item=None):
         """
         The application looks up the item with the provided item_id
         in order to update the items's details
 
         :param item_id: The id of the item intended to be updated
+        :param bucket_id: The id of the bucket intended to be updated
         :param new_item: item object that holds updated details
         :return: The item with the matching id.
         """
-
         updated_item = None
-        items = self.get_item_by_id(item_id)
+        items = self.get_item_by_id(item_id, bucket_id)
         item = None
 
         if int(item_id) < 0:

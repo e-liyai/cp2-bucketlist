@@ -31,10 +31,13 @@ def initialize_api_routes(app):
                          'delete_bucketlist', delete_bucketlist, methods=['DELETE'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items', 'create_bucketlist_item', create_item,
                          methods=['POST'])
-        app.add_url_rule('/api/v1/bucketlists/items/<string:item_id>', 'item', item,
+        app.add_url_rule('/api/v1/bucketlists/items/<string:bucket_id>', 'item', item,
                          methods=['GET'])
         app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items/<string:item_id>', 'item', item,
                          methods=['GET'])
+        app.add_url_rule('/api/v1/bucketlists/<string:bucket_id>/items/<string:item_id>',
+                         'update_item', update_item,
+                         methods=['PUT'])
         app.add_url_rule('/api/v1/bucketlists/items/<string:item_id>',
                          'delete_bucketlist_item', delete_item,
                          methods=['DELETE'])
