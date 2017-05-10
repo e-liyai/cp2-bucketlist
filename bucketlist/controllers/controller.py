@@ -635,7 +635,7 @@ def search(search_value):
             'MESSAGE': 'Invalid token provided'
         }
         data_response = make_response(jsonify(data), 401)
-        data_response.headers['STATUS'] = 'success'
+        data_response.headers['STATUS'] = 'fail'
         return data_response
 
     search_result = DATA_CONTROLLER.search_database(search_value, resp['decode_data'], serialize=True)
@@ -656,7 +656,29 @@ def search(search_value):
         }
 
         data_response = make_response(jsonify(response_data), 404)
-        data_response.headers['STATUS'] = 'success'
+        data_response.headers['STATUS'] = 'fail'
         return data_response
 
 
+def authenticate():
+    auth_token = request.headers.get('TOKEN')
+    resp = decode_auth_token(auth_token)
+
+    if resp['status']:
+        response_data = {
+            'STATUS': 'success',
+            'MESSAGE': 'Authenticated'
+        }
+
+        data_response = make_response(jsonify(response_data), 200)
+        data_response.headers['STATUS'] = 'success'
+        return data_response
+    else:
+        response_data = {
+            'STATUS': 'fail',
+            'MESSAGE': 'Not authenticated'
+        }
+
+        data_response = make_response(jsonify(response_data), 401)
+        data_response.headers['STATUS'] = 'fail'
+        return data_response
