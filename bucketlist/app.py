@@ -18,7 +18,6 @@ from bucketlist.config import app_config
 app = Flask(__name__, instance_path='/instance')
 
 CORS(app)
-app.config['SECRET_KEY'] = 'Bucketlist api application, keep your list updated'
 app.config.from_object(app_config['development'])
 app.config.from_pyfile('config.py')
 

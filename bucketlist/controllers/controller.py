@@ -126,8 +126,6 @@ def login():
     except ValueError as err:
         tmp_response = make_response("", 500)
         tmp_response.headers["STATUS"] = 'fail'
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -207,8 +205,6 @@ def add_user():
     except ValueError as err:
         tmp_response = make_response("", 500)
         tmp_response.headers["STATUS"] = 'fail'
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -271,13 +267,6 @@ def update_user(user_id):
         return response
 
 
-def get_error_code(error):
-    if "parameter" in error.message.lower():
-        return 8100
-
-    return 8000
-
-
 @check_token
 def delete_user(user_id):
     """
@@ -294,8 +283,6 @@ def delete_user(user_id):
             return make_response("", 404)
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -342,8 +329,6 @@ def create_bucketlist():
     except ValueError as err:
         tmp_response = make_response("", 500)
         tmp_response.headers["STATUS"] = 'fail'
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -446,8 +431,6 @@ def update_bucketlist(bucket_id):
         return data_response
     else:
         tmp_response = make_response("", 500)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = 8000
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = 'No data was updated'
         return tmp_response
 
 
@@ -479,8 +462,6 @@ def delete_bucketlist(bucket_id):
             return data_response
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
@@ -622,8 +603,6 @@ def delete_item(item_id):
             return make_response("", 404)
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-CODE"] = get_error_code(err)
-        tmp_response.headers["BUCKET-LIST-APP-ERROR-MESSAGE"] = err.message
         return tmp_response
 
 
