@@ -74,7 +74,7 @@ class APITest(TestCase):
 
     def test_get_all_items(self):
         print('=> Test get bucket list items')
-        request = self.app.get('/api/v1/bucketlists/items', headers={'TOKEN': self.data['TOKEN']})
+        request = self.app.get('/api/v1/bucketlists/items/1', headers={'TOKEN': self.data['TOKEN']})
         resp_data = json.loads(request.data)
         item = resp_data['bucketlist_item'][0]
         self.assertEqual(request.status_code, 200)
@@ -149,7 +149,7 @@ class APITest(TestCase):
             'name': 'updated_test_bucket_list'
         }
         json_data = json.dumps(data)
-        response = self.app.put('/api/v1/bucketlists/2', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        response = self.app.put('/api/v1/bucketlists/1', data=json_data, headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
 
     def test_delete_bucketlist(self):
@@ -159,7 +159,7 @@ class APITest(TestCase):
 
     def test_get_all_bucket_list_item(self):
         print('=> get bucket list item')
-        response = self.app.get('/api/v1/bucketlists/items', headers={'TOKEN': self.data['TOKEN']})
+        response = self.app.get('/api/v1/bucketlists/items/1', headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 200)
 
     def test_get_bucket_list_item(self):
@@ -193,7 +193,7 @@ class APITest(TestCase):
         }
 
         json_data = json.dumps(data)
-        response = self.app.put('/api/v1/bucketlists/items/5', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        response = self.app.put('/api/v1/bucketlists/update-item/5', data=json_data, headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
 
     def test_delete_bucket_list_item(self):
