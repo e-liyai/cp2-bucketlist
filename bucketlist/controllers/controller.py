@@ -66,17 +66,6 @@ def drop_tables():
     DATA_CONTROLLER.drop_tables()
 
 
-def build_message(key, message):
-    """
-
-    The method returns key value json format messages
-
-    :param : None
-    :return: None
-    """
-    return {key: message}
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return DATA_CONTROLLER.get_user_by_id(user_id)
@@ -121,7 +110,7 @@ def login():
                 'STATUS': 'fail',
                 'MESSAGE': 'Username or password provided does not match.'
             }
-            return make_response(jsonify(response_data)), 404
+            return make_response(jsonify(response_data)), 401
 
     except ValueError as err:
         tmp_response = make_response("", 500)

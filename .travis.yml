@@ -1,0 +1,22 @@
+language: python
+python:
+- '2.7'
+install:
+- pip install -r requirements.txt
+- pip install coveralls
+
+services:
+- postgresql
+
+before_script:
+- psql -c 'create database bucketlist;' -U admin -P admin
+- psql -c 'create database test_bucketlist;' -U admin -P admin
+
+- python manage.py dropdb
+- python manage.py drop_test_db
+- python manage.py initdb
+- python manage.py populatedb
+
+script: nosetests --with-coverage --cover-package=bucketlist
+
+after_success: coveralls
