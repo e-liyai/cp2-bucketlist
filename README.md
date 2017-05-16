@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Andela-eugene/cp2-bucketlist.svg?branch=master)](https://travis-ci.org/Andela-eugene/cp2-bucketlist)
 # Bucketlist
 
 Bucketlist is a Flask API application that helps individuals keep track of that elusive white whale.

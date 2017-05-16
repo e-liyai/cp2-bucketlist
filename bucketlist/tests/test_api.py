@@ -116,6 +116,19 @@ class APITest(TestCase):
         self.assertEqual(request.status_code, 200)
         self.assertIsNotNone(item)
 
+    def test_get_all_items_in_first_page(self):
+        print('=> Test get bucket list items')
+        request = self.app.get('/api/v1/bucketlists/items/1?limit=1', headers={'TOKEN': self.data['TOKEN']})
+        resp_data = json.loads(request.data)
+        item = resp_data['bucketlist_item'][0]
+        self.assertEqual(request.status_code, 200)
+        self.assertIsNotNone(item)
+
+    def test_get_items_in_invalid_page(self):
+        print('=> Test get bucket list items')
+        request = self.app.get('/api/v1/bucketlists/items/1?limit=10', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(request.status_code, 404)
+
     def test_get_users(self):
         print('=> Test get users')
         request = self.app.get('/api/v1/users/', headers={'TOKEN': self.data['TOKEN']})
@@ -229,7 +242,7 @@ class APITest(TestCase):
         print('=> update item')
         data = {
             "name": 'new_updated_name',
-            "done": 'False',
+            "done": 'True',
             "description": 'This is a test update call'
         }
 
