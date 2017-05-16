@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from bucketlist.models.bucketlist import Bucketlist
 from bucketlist.models.users import Users
 from bucketlist.models.bucketlist_items import BucketlistItems
-from bucketlist.models.initialize_db import init_bucketlist_database
+from bucketlist.models.initialize_db import init_bucketlist_database, drop_bucketlist_database
 
 
 class DatabaseController:
@@ -29,24 +29,25 @@ class DatabaseController:
             raise ValueError('The parameters specified in engine string are not supported by SQLAlchemy')
         self.engine = engine
         db_engine = create_engine(engine)
+        self.db_engine = db_engine
         db_session = sessionmaker(bind=db_engine)
         self.session = db_session()
 
     def initialize_database(self):
         """
         Initializes the database tables and relationships
-        :return: None
+        :return: String
         """
         init_bucketlist_database(self.engine)
+        return 'Database Initialized'
 
     def drop_tables(self):
         """
         drops the database tables and relationships
-        :return: None
+        :return: String
         """
-        BucketlistItems.__table__.drop(self.engine)
-        Bucketlist.__table__.drop(self.engine)
-        Users.__table__.drop(self.engine)
+        drop_bucketlist_database(self.db_engine)
+        return 'Database Dropped'
 
     def create_user(self, first_name, last_name, username, email, password):
         """
@@ -66,9 +67,9 @@ class DatabaseController:
         self.session.add(new_user)
         self.session.commit()
 
-        return new_user.user_id
+        return {"user_id": new_user.user_id, "username": new_user.username}
 
-    def get_user_by_email_or_username(self, username=None, email=None, serialize=False):
+    def get_user_by_email_or_username(self, username=None, serialize=False):
         """
         If the username parameter is  provided, the application looks up the user with the provided username,
         else it returns None
@@ -78,11 +79,12 @@ class DatabaseController:
         :return: The user with the matching username or email.
         """
 
+        if isinstance(username, int):
+            raise ValueError('Error in values passed to server!')
+
         single_user = None
         if username:
             single_user = self.get_by_username(username)
-        elif email:
-            single_user = self.get_by_email(email)
 
         if serialize and single_user:
             return [user.serialize() for user in single_user]
@@ -103,7 +105,10 @@ class DatabaseController:
         if user_id is None:
             all_users = self.session.query(Users).order_by(Users.last_name).all()
         else:
-            all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
+            if int(user_id) < 0:
+                raise ValueError('Parameter [user_id] should be positive!')
+            else:
+                all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
 
         if serialize:
             return [user.serialize() for user in all_users]
@@ -119,6 +124,9 @@ class DatabaseController:
         :param new_user: user object that holds updated details
         :return: The user with the matching id.
         """
+
+        if int(user_id) < 0:
+            raise ValueError('Parameter [user_id] should be positive!')
 
         updated_user = None
         users = self.get_user_by_id(user_id)
@@ -147,11 +155,17 @@ class DatabaseController:
         :param user_id: The id of the user intended to be deleted
         :return: True if user object was deleted, else False.
         """
+        if int(user_id) < 0:
+            raise ValueError('Parameter [user_id] should be positive!')
 
         if user_id:
-            user_deleted = self.session.query(Users).filter(Users.user_id == user_id).delete()
-            return user_deleted > 0
-        return False
+            try:
+                user_deleted = self.session.query(Users).filter(Users.user_id == user_id).first()
+                self.session.delete(user_deleted)
+                self.session.commit()
+                return True
+            except Exception as ex:
+                return False
 
     def create_bucketlist(self, bucketlist_name, user):
         """
@@ -169,11 +183,12 @@ class DatabaseController:
 
         return created_bucketlist.bucketlist_name
 
-    def get_bucketlist_by_id(self, bucket_id=None, serialize=False):
+    def get_bucketlist_by_id(self, bucket_id=None, user=None, serialize=False):
         """
         If the bucket_id parameter is  provided, the application looks up the buketlist with the provided id,
         else it returns all the bucketlists in the database
 
+        :param user: id of user who owns the bucketlist
         :param bucket_id: The id of the bucketlist intended to be searched(default value is None)
         :return: The bucketlist with the matching id or all bucketlists.
         """
@@ -181,16 +196,20 @@ class DatabaseController:
         all_bucketlists = []
 
         if bucket_id is None:
-            all_bucketlists = self.session.query(Bucketlist).order_by(Bucketlist.bucketlist_id).all()
+            all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user).all()
         else:
-            all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).all()
+            if int(bucket_id) < 0:
+                raise ValueError('Parameter [bucket_id] should be positive!')
+            else:
+                all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user)\
+                    .filter(Bucketlist.bucketlist_id == bucket_id).all()
 
         if serialize:
             return [bucketlist.serialize() for bucketlist in all_bucketlists]
         else:
             return all_bucketlists
 
-    def update_bucketlist(self, bucket_id, new_bucketlist):
+    def update_bucketlist(self, bucket_id=None, new_bucketlist=None, user=None):
         """
         The application looks up the bucketlist with the provided bucket_id
         in order to update the bucketlist's details
@@ -200,8 +219,11 @@ class DatabaseController:
         :return: The Bucketlist with the matching id.
         """
 
+        if int(bucket_id) < 0:
+            raise ValueError('Parameter [bucket_id] should be positive!')
+
         updated_bucketlist = None
-        bucketlists = self.get_bucketlist_by_id(bucket_id)
+        bucketlists = self.get_bucketlist_by_id(bucket_id=bucket_id, user=user)
         bucketlist = None
         if len(bucketlists) is not 1:
             return updated_bucketlist
@@ -212,7 +234,7 @@ class DatabaseController:
             bucketlist.bucketlist_name = new_bucketlist["bucketlist_name"]
             self.session.add(bucketlist)
             self.session.commit()
-            updated_bucketlist = self.get_bucketlist_by_id(bucket_id)[0]
+            updated_bucketlist = self.get_bucketlist_by_id(bucket_id=bucket_id, user=user)[0]
 
         return updated_bucketlist.serialize()
 
@@ -225,10 +247,17 @@ class DatabaseController:
         :return: True if bucketlist object was deleted, else False.
         """
 
+        if int(bucket_id) < 0:
+            raise ValueError('Parameter [bucket_id] should be positive!')
+
         if bucket_id:
-            bucketlist_deleted = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).delete()
-            return bucketlist_deleted > 0
-        return False
+            try:
+                bucket_list = self.session.query(Bucketlist).filter(Bucketlist.bucketlist_id == bucket_id).first()
+                self.session.delete(bucket_list)
+                self.session.commit()
+                return True
+            except Exception as ex:
+                return False
 
     def create_bucketlist_item(self, bucketlist_item_name, description, bucketlist):
         """
@@ -248,12 +277,13 @@ class DatabaseController:
 
         return new_bucketlist_item.item_name
 
-    def get_item_by_id(self, item_id=None, serialize=False):
+    def get_item_by_id(self, item_id=None, bucket_id=None, serialize=False):
         """
         If the item_id parameter is  provided, the application looks up the item with the id, in the bucket lists
         available,
         else it returns all the items in the bucket list
-
+        
+        :param bucket_id: bucket list id
         :param item_id: The id of the bucketlist intended to be searched(default value is None)
         :return: The bucketlist with the matching id or all bucketlists.
         """
@@ -261,9 +291,13 @@ class DatabaseController:
         all_items = []
 
         if item_id is None:
-            all_items = self.session.query(BucketlistItems).order_by(BucketlistItems.item_id).all()
+            all_items = self.session.query(BucketlistItems).filter(BucketlistItems.bucketlist == bucket_id).all()
         else:
-            all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).all()
+            if int(item_id) < 0:
+                return all_items
+            else:
+                all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
+                    .all()
 
         if serialize:
             return [item.serialize() for item in all_items]
@@ -284,34 +318,22 @@ class DatabaseController:
 
         return searched_user
 
-    def get_by_email(self, email=None):
-        """
-        If the email parameter is  provided, the application looks up the user with the email provided.
-
-        :param email: The email of the user intended to be searched(default value is None)
-        :return: The user with the matching email.
-        """
-
-        searched_user = None
-
-        if email:
-            searched_user = self.session.query(Users).filter_by(email=email).first()
-
-        return searched_user
-
-    def update_bucketlist_item(self, item_id, new_item):
+    def update_bucketlist_item(self, item_id=None, new_item=None):
         """
         The application looks up the item with the provided item_id
         in order to update the items's details
 
         :param item_id: The id of the item intended to be updated
+        :param bucket_id: The id of the bucket intended to be updated
         :param new_item: item object that holds updated details
         :return: The item with the matching id.
         """
-
         updated_item = None
-        items = self.get_item_by_id(item_id)
+        items = self.get_item_by_id(item_id=item_id)
         item = None
+        if int(item_id) < 0:
+            raise ValueError('Parameter [item_id] should be positive!')
+
         if len(items) is not 1:
             return updated_item
         else:
@@ -328,6 +350,28 @@ class DatabaseController:
 
         return updated_item.serialize()
 
+    def search_database(self, search_value, user, serialize=False):
+        """
+
+        The search method searches bucket list database.
+
+        :param search_value: value to be searched
+        :param user: owner of bucketlist
+        :return: item with the matching value.
+        """
+
+        all_bucketlists = []
+
+        if search_value:
+            all_bucketlists = self.session.query(Bucketlist).filter(
+                Bucketlist.bucketlist_name.like('%{}%'.format(search_value)))\
+                .filter(Bucketlist.user == user).all()
+
+        if serialize:
+            return [bucketlist.serialize() for bucketlist in all_bucketlists]
+        else:
+            return all_bucketlists
+
     def user_login_authentication(self, username=None, email=None, password=None):
         """
         The method checks for username/email and password match in the database
@@ -339,12 +383,6 @@ class DatabaseController:
         """
         if username and password:
             user = self.get_user_by_email_or_username(username=username)
-            if user and user.check_user_password(password):
-                return {'status': True, 'User': user}
-            else:
-                return {'status': False, 'User': None}
-        elif email and password:
-            user = self.get_user_by_email_or_username(email=email)
             if user and user.check_user_password(password):
                 return {'status': True, 'User': user}
             else:
@@ -361,10 +399,17 @@ class DatabaseController:
         :return: True if item object was deleted, else False.
         """
 
+        if int(item_id) < 0:
+            raise ValueError('Parameter [item_id] should be positive!')
+
         if item_id:
-            item_deleted = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).delete()
-            return item_deleted > 0
-        return False
+            try:
+                item_deleted = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id).first()
+                self.session.delete(item_deleted)
+                self.session.commit()
+                return True
+            except Exception as ex:
+                return False
 
     def populate_database(self):
 

@@ -12,7 +12,7 @@ from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 
 from bucketlist.app import app
-from bucketlist.apis.api_routes import *
+from bucketlist.init_test_db import *
 
 migrate = Migrate(app)
 manager = Manager(app)
@@ -27,12 +27,25 @@ def initdb():
 @manager.command
 def populatedb():
     fill_database()
+    print('Database populated')
 
 
 @manager.command
 def dropdb():
     drop_database_tables()
     print('Dropped the database')
+
+
+@manager.command
+def init_test_db():
+    initialize_test_database()
+
+
+@manager.command
+def drop_test_db():
+    print('Test database dropped')
+    drop_test_database()
+
 
 if __name__ == '__main__':
     manager.run()

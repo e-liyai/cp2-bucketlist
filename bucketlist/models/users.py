@@ -32,10 +32,6 @@ class Users(Model, UserMixin):
     def check_user_password(self, _password):
         return check_password_hash(self.hash_password, _password)
 
-    @staticmethod
-    def get_by_user_id(u_id):
-        return Users.query.filter_by(user_id=u_id).first()
-
     @property
     def password(self, password):
         raise AttributeError('password: write-only field')

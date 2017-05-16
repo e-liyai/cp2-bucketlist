@@ -23,14 +23,6 @@ class Bucketlist(Model):
     user = Column(Integer, ForeignKey('Users.user_id'))
     bucketlist_items = relationship('BucketlistItems')
 
-    @staticmethod
-    def return_all_bucketlist():
-        pass
-
-    @staticmethod
-    def get_by_bucketlist_id(bucketlist_id):
-        pass
-
     def serialize(self):
         """
         The method returns a dictionary of key value pair

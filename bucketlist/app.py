@@ -10,12 +10,16 @@ Desc      : Runs the flask api application
 # ============================================================================
 from flask import Flask
 from flask_login import LoginManager
+from flask_cors import CORS
 
+from bucketlist.config import app_config
 
 # Create flask application
-app = Flask(__name__)
+app = Flask(__name__, instance_path='/instance')
 
-app.config['SECRET_KEY'] = 'Bucketlist api application, keep your list updated'
+CORS(app)
+app.config.from_object(app_config['development'])
+app.config.from_pyfile('config.py')
 
 # Configure authentication
 login_manager = LoginManager()
