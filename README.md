@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Andela-eugene/cp2-bucketlist.svg?branch=master)](https://travis-ci.org/Andela-eugene/cp2-bucketlist)
+[![Build Status](https://travis-ci.org/Andela-eugene/cp2-bucketlist.svg?branch=master)](https://travis-ci.org/Andela-eugene/cp2-bucketlist) [![Coverage Status](https://coveralls.io/repos/github/Andela-eugene/cp2-bucketlist/badge.svg?branch=ft-bucketlist-items)](https://coveralls.io/github/Andela-eugene/cp2-bucketlist?branch=ft-bucketlist-items)
 # Bucketlist
 
 Bucketlist is a Flask API application that helps individuals keep track of that elusive white whale.
