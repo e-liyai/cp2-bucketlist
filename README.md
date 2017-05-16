@@ -35,7 +35,7 @@ $ export BUCKETLIST_SQLALCHEMY_DATABASE_URI='url_of_the_main_bucketlist_database
 $ export TEST_BUCKETLIST_SQLALCHEMY_DATABASE_URI='url_of_the_test_bucketlist_database'
 ```
 
-## Configuration
+## Application Configuration
 The run environment associated with the application can either be `development`, `testing` or `production`.
 The environment dictate how the application will run. This environments are setup in the `config.py` file.
 
