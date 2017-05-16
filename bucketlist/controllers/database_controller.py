@@ -79,9 +79,6 @@ class DatabaseController:
         :return: The user with the matching username or email.
         """
 
-        if isinstance(username, int):
-            raise ValueError('Error in values passed to server!')
-
         single_user = None
         if username:
             single_user = self.get_by_username(username)
@@ -105,10 +102,7 @@ class DatabaseController:
         if user_id is None:
             all_users = self.session.query(Users).order_by(Users.last_name).all()
         else:
-            if int(user_id) < 0:
-                raise ValueError('Parameter [user_id] should be positive!')
-            else:
-                all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
+            all_users = self.session.query(Users).filter(Users.user_id == user_id).all()
 
         if serialize:
             return [user.serialize() for user in all_users]
@@ -124,9 +118,6 @@ class DatabaseController:
         :param new_user: user object that holds updated details
         :return: The user with the matching id.
         """
-
-        if int(user_id) < 0:
-            raise ValueError('Parameter [user_id] should be positive!')
 
         updated_user = None
         users = self.get_user_by_id(user_id)
@@ -155,8 +146,6 @@ class DatabaseController:
         :param user_id: The id of the user intended to be deleted
         :return: True if user object was deleted, else False.
         """
-        if int(user_id) < 0:
-            raise ValueError('Parameter [user_id] should be positive!')
 
         if user_id:
             try:
@@ -198,10 +187,7 @@ class DatabaseController:
         if bucket_id is None:
             all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user).all()
         else:
-            if int(bucket_id) < 0:
-                raise ValueError('Parameter [bucket_id] should be positive!')
-            else:
-                all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user)\
+            all_bucketlists = self.session.query(Bucketlist).filter(Bucketlist.user == user)\
                     .filter(Bucketlist.bucketlist_id == bucket_id).all()
 
         if serialize:
@@ -218,9 +204,6 @@ class DatabaseController:
         :param new_bucketlist: bucketlist object that holds updated details
         :return: The Bucketlist with the matching id.
         """
-
-        if int(bucket_id) < 0:
-            raise ValueError('Parameter [bucket_id] should be positive!')
 
         updated_bucketlist = None
         bucketlists = self.get_bucketlist_by_id(bucket_id=bucket_id, user=user)
@@ -246,9 +229,6 @@ class DatabaseController:
         :param bucket_id: The id of the bucketlist intended to be deleted
         :return: True if bucketlist object was deleted, else False.
         """
-
-        if int(bucket_id) < 0:
-            raise ValueError('Parameter [bucket_id] should be positive!')
 
         if bucket_id:
             try:
@@ -293,10 +273,7 @@ class DatabaseController:
         if item_id is None:
             all_items = self.session.query(BucketlistItems).filter(BucketlistItems.bucketlist == bucket_id).all()
         else:
-            if int(item_id) < 0:
-                return all_items
-            else:
-                all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
+            all_items = self.session.query(BucketlistItems).filter(BucketlistItems.item_id == item_id)\
                     .all()
 
         if serialize:
@@ -331,8 +308,6 @@ class DatabaseController:
         updated_item = None
         items = self.get_item_by_id(item_id=item_id)
         item = None
-        if int(item_id) < 0:
-            raise ValueError('Parameter [item_id] should be positive!')
 
         if len(items) is not 1:
             return updated_item
@@ -398,9 +373,6 @@ class DatabaseController:
         :param item_id: The id of the item intended to be deleted
         :return: True if item object was deleted, else False.
         """
-
-        if int(item_id) < 0:
-            raise ValueError('Parameter [item_id] should be positive!')
 
         if item_id:
             try:
@@ -481,3 +453,4 @@ class DatabaseController:
         self.session.add(bucketlist_item5)
         self.session.add(bucketlist_item6)
         self.session.commit()
+        return 'Populate database'
