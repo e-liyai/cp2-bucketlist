@@ -62,6 +62,11 @@ class APITest(TestCase):
         self.assertEqual(request.status_code, 200)
         self.assertEqual(resp_data['total'], 1)
 
+    def test_get_error_paged_user(self):
+        print('=> Test get user by id')
+        request = self.app.get('/api/v1/users/?limit=10', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(request.status_code, 404)
+
     def test_get_user(self):
         print('=> Test get user by id')
         request = self.app.get('/api/v1/users/?limit=1', headers={'TOKEN': self.data['TOKEN']})
@@ -178,10 +183,27 @@ class APITest(TestCase):
         response = self.app.put('/api/v1/user/1', data=json_data, headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
 
+    def test_update_non_existing_user(self):
+        print('=> Update existing user')
+        data = {'username': 'UU',
+                'first_name': 'eugene',
+                'last_name': 'liyailiyai',
+                'email': 'liyail@mail.com'
+                }
+
+        json_data = json.dumps(data)
+        response = self.app.put('/api/v1/user/100', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 500)
+
     def test_delete_user(self):
         print('=> delete user')
         response = self.app.delete('/api/v1/delete_user/3', headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 200)
+
+    def test_delete_non_existent_user(self):
+        print('=> delete user')
+        response = self.app.delete('/api/v1/delete_user/300', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 404)
 
     def test_create_bucketlist(self):
         print('=> create bucket list')
@@ -192,6 +214,15 @@ class APITest(TestCase):
         response = self.app.post('/api/v1/bucketlists/', data=json_data, headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
 
+    def test_create_bucketlist_with_invalid_token(self):
+        print('=> create bucket list')
+        data = {
+            'name': 'test_bucket_list'
+        }
+        json_data = json.dumps(data)
+        response = self.app.post('/api/v1/bucketlists/', data=json_data, headers={'TOKEN': 'Invalid_Token'})
+        self.assertEqual(response.status_code, 401)
+
     def test_update_bucketlist(self):
         print('=> update bucketlist')
         data = {
@@ -201,10 +232,43 @@ class APITest(TestCase):
         response = self.app.put('/api/v1/bucketlists/1', data=json_data, headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
 
+    def test_update_bucketlist_with_invalid_token(self):
+        print('=> update bucketlist')
+        data = {
+            'name': 'updated_test_bucket_list'
+        }
+        json_data = json.dumps(data)
+        response = self.app.put('/api/v1/bucketlists/1', data=json_data, headers={'TOKEN': 'Invalid_Token'})
+        self.assertEqual(response.status_code, 401)
+
+    def test_update_bucketlist_with_non_existant_id(self):
+        print('=> update bucketlist')
+        data = {
+            'name': 'updated_test_bucket_list'
+        }
+        json_data = json.dumps(data)
+        response = self.app.put('/api/v1/bucketlists/1000', data=json_data, headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 500)
+
     def test_delete_bucketlist(self):
         print('=> delete bucket list')
         response = self.app.delete('/api/v1/bucketlists/3', headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 200)
+
+    def test_get_paged_bucketlist(self):
+        print('=> get bucket list')
+        response = self.app.get('/api/v1/bucketlists/?limit=1', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_paged_bucketlist_with_invalid_token(self):
+        print('=> get bucket list')
+        response = self.app.get('/api/v1/bucketlists/?limit=1', headers={'TOKEN': 'Invalid_Token'})
+        self.assertEqual(response.status_code, 401)
+
+    def test_get_non_existent_page_bucketlist(self):
+        print('=> get bucket list')
+        response = self.app.get('/api/v1/bucketlists/?limit=100', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_bucketlist_that_does_not_exist(self):
         print('=> delete bucket list')
@@ -224,18 +288,16 @@ class APITest(TestCase):
         self.assertIsNotNone(item)
         self.assertEqual(response.status_code, 200)
 
-    def create_bucketlist_item(self):
+    def test_create_bucketlist_item(self):
         print('=> create bucket list item')
         data = {
-            "item_name": "test_bucketlist_item",
+            "name": "test_bucketlist_item",
             "description": "This is a test bucket list item"
         }
         json_data = json.dumps(data)
         response = self.app.post('/api/v1/bucketlists/1/items', data=json_data, headers={'TOKEN': self.data['TOKEN']})
 
         resp_data = json.loads(response.data)
-        item = resp_data['bucketlist_item'][0]
-        self.assertGreater(item['item_id'], 1)
         self.assertEqual(response.status_code, 201)
 
     def test_update_bucketlist_item(self):
@@ -250,6 +312,11 @@ class APITest(TestCase):
         response = self.app.put('/api/v1/bucketlists/update-item/5', data=json_data,
                                 headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 201)
+
+    def test_get_non_existant_bucketlist_item(self):
+        print('=> get non existant bucketlist')
+        response = self.app.get('/api/v1/bucketlists/1/items/100', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 404)
 
     def test_update_bucketlist_item_that_does_not_exist(self):
         print('=> update item')
