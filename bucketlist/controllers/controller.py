@@ -65,6 +65,7 @@ def drop_tables():
     """
     DATA_CONTROLLER.drop_tables()
 
+
 def login():
     """
 
@@ -108,7 +109,6 @@ def login():
 
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["STATUS"] = 'fail'
         return tmp_response
 
 
@@ -155,8 +155,6 @@ def users(user_id=None, serialize=True):
         # Entity tag uniquely identifies request
         response.headers["Cache-Control"] = "private, max-age=300"
         return response
-    else:
-        return users
 
 
 def add_user():
@@ -187,31 +185,7 @@ def add_user():
         return data_response
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["STATUS"] = 'fail'
         return tmp_response
-
-
-@check_token
-def user_by_id(user_id):
-    """
-
-    The method returns user with provided user_id in a json responses.
-
-    :param user_id: user id of the user to be searched
-    :return: User json response
-    """
-    current_user = DATA_CONTROLLER.get_user_by_id(user_id, serialize=True)
-    if current_user:
-        return jsonify({"user": current_user})
-    else:
-        """
-        if user with id is not found 404 page is returned
-        """
-        abort(404)
-        return jsonify({
-            'STATUS': 'Fail',
-            'MESSAGE': 'User with provided id does not exist',
-        })
 
 
 @check_token
@@ -289,13 +263,12 @@ def create_bucketlist():
         auth_token = request.headers.get('TOKEN')
         resp = decode_auth_token(auth_token)
 
-        if not resp['status']:
+        if resp['status'] is False:
             data = {
                 'STATUS': 'fail',
                 'MESSAGE': 'Invalid token provided'
             }
             data_response = make_response(jsonify(data), 401)
-            data_response.headers['STATUS'] = 'success'
             return data_response
 
         new_bucket_name = DATA_CONTROLLER.create_bucketlist(bucketlist_name, resp['decode_data'])
@@ -311,7 +284,6 @@ def create_bucketlist():
         return data_response
     except ValueError as err:
         tmp_response = make_response("", 500)
-        tmp_response.headers["STATUS"] = 'fail'
         return tmp_response
 
 
@@ -327,8 +299,8 @@ def bucketlist(bucket_id=None, serialize=True):
     """
 
     auth_token = request.headers.get('TOKEN')
-
-    if auth_token:
+    resp = decode_auth_token(auth_token)
+    if resp['status']:
         resp = decode_auth_token(auth_token)
         if resp['status']:
             if resp['decode_data']:
@@ -365,8 +337,6 @@ def bucketlist(bucket_id=None, serialize=True):
                     response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
                     response.headers["Cache-Control"] = "private, max-age=300"
                     return response
-                else:
-                    return bucketlists
     else:
         response_object = {
             'STATUS': 'fail',
@@ -390,13 +360,12 @@ def update_bucketlist(bucket_id):
 
     auth_token = request.headers.get('TOKEN')
     resp = decode_auth_token(auth_token)
-    if not resp['status']:
+    if resp['status'] is False:
         data = {
             'STATUS': 'fail',
             'MESSAGE': 'Invalid token provided'
         }
         data_response = make_response(jsonify(data), 401)
-        data_response.headers['STATUS'] = 'success'
         return data_response
 
     new_bucket = {
@@ -500,8 +469,6 @@ def item(item_id=None, bucket_id=None, serialize=True):
         response.headers["ETag"] = str(hashlib.sha256(json_data).hexdigest())
         response.headers["Cache-Control"] = "private, max-age=300"
         return response
-    else:
-        return items
 
 
 @check_token
@@ -600,7 +567,7 @@ def search(search_value):
     """
     auth_token = request.headers.get('TOKEN')
     resp = decode_auth_token(auth_token)
-    if not resp['status']:
+    if resp['status'] is False:
         data = {
             'STATUS': 'fail',
             'MESSAGE': 'Invalid token provided'

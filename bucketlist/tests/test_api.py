@@ -238,7 +238,7 @@ class APITest(TestCase):
             'name': 'updated_test_bucket_list'
         }
         json_data = json.dumps(data)
-        response = self.app.put('/api/v1/bucketlists/1', data=json_data, headers={'TOKEN': 'Invalid_Token'})
+        response = self.app.put('/api/v1/bucketlists/1', data=json_data, headers={'TOKEN': None})
         self.assertEqual(response.status_code, 401)
 
     def test_update_bucketlist_with_non_existant_id(self):
@@ -335,6 +335,11 @@ class APITest(TestCase):
         print('=> delete bucket list item')
         response = self.app.delete('/api/v1/bucketlists/items/6', headers={'TOKEN': self.data['TOKEN']})
         self.assertEqual(response.status_code, 200)
+
+    def test_delete_non_existant_bucket_list_item(self):
+        print('=> delete bucket list item')
+        response = self.app.delete('/api/v1/bucketlists/items/100', headers={'TOKEN': self.data['TOKEN']})
+        self.assertEqual(response.status_code, 404)
 
     def test_token_api_authenticate(self):
         print('=> test api authenticate')
