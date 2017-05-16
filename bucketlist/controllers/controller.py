@@ -192,29 +192,6 @@ def add_user():
 
 
 @check_token
-def user_by_id(user_id):
-    """
-
-    The method returns user with provided user_id in a json responses.
-
-    :param user_id: user id of the user to be searched
-    :return: User json response
-    """
-    current_user = DATA_CONTROLLER.get_user_by_id(user_id, serialize=True)
-    if current_user:
-        return jsonify({"user": current_user})
-    else:
-        """
-        if user with id is not found 404 page is returned
-        """
-        abort(404)
-        return jsonify({
-            'STATUS': 'Fail',
-            'MESSAGE': 'User with provided id does not exist',
-        })
-
-
-@check_token
 def update_user(user_id):
     """
 
@@ -289,7 +266,7 @@ def create_bucketlist():
         auth_token = request.headers.get('TOKEN')
         resp = decode_auth_token(auth_token)
 
-        if not resp['status']:
+        if resp['status'] is False:
             data = {
                 'STATUS': 'fail',
                 'MESSAGE': 'Invalid token provided'
@@ -390,7 +367,7 @@ def update_bucketlist(bucket_id):
 
     auth_token = request.headers.get('TOKEN')
     resp = decode_auth_token(auth_token)
-    if not resp['status']:
+    if resp['status'] is False:
         data = {
             'STATUS': 'fail',
             'MESSAGE': 'Invalid token provided'
@@ -600,7 +577,7 @@ def search(search_value):
     """
     auth_token = request.headers.get('TOKEN')
     resp = decode_auth_token(auth_token)
-    if not resp['status']:
+    if resp['status'] is False:
         data = {
             'STATUS': 'fail',
             'MESSAGE': 'Invalid token provided'
