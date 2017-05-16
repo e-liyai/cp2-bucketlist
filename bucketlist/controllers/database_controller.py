@@ -481,3 +481,4 @@ class DatabaseController:
         self.session.add(bucketlist_item5)
         self.session.add(bucketlist_item6)
         self.session.commit()
+        return 'Database Populated'

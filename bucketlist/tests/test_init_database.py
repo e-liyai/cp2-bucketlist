@@ -24,5 +24,7 @@ class InitDBTest(TestCase):
     def test_initialise_database(self):
         initialized = self.TEST_DATA_CONTROLLER.initialize_database()
         self.assertEqual(initialized, 'Database Initialized')
+        populate = self.TEST_DATA_CONTROLLER.populate_database()
+        self.assertEqual(populate, 'Database Populated')
         dropped = self.TEST_DATA_CONTROLLER.drop_tables()
         self.assertEqual(dropped, 'Database Dropped')
