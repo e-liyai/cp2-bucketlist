@@ -16,7 +16,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_DATABASE_URI = os.environ['BUCKETLIST_SQLALCHEMY_DATABASE_URI']
-    SECRET_KEY = 'Bucketlist api application, keep your list updated'
+    SECRET_KEY = os.environ['BUCKETLIST_SECRET_KEY']
 
 
 class ProductionConfig(Config):
@@ -37,7 +37,7 @@ class TestingConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ['TEST_BUCKETLIST_SQLALCHEMY_DATABASE_URI']
-    SECRET_KEY = 'Bucketlist api application, keep your list updated'
+    SECRET_KEY = os.environ['BUCKETLIST_SECRET_KEY']
 
 
 app_config = {
